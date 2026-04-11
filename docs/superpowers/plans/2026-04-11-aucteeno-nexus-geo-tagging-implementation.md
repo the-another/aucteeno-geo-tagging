@@ -2165,6 +2165,14 @@ Expected: switched to new branch `feat/query-loop-geo-tagging-hooks`.
 
 **Strategy rationale:** The base plugin's `render.php` is a procedural file, not a class — including it from a unit test requires ~25 Brain Monkey function stubs and still leaves the test fragile. Instead, extract the filter-call-and-sanitize logic into a small static helper class. The helper is trivially testable in isolation, and `render.php`'s only change becomes a single method call wrapped in the `! $has_product_ids` guard. This keeps the spec's architectural intent (filter hook inside `! $has_product_ids` path) and is cleaner than the full-file include approach. Spec §15 item 1 is satisfied — the filter hook still lives in the `aucteeno` plugin; the helper is just an implementation detail of how `render.php` calls `apply_filters()`.
 
+**Version placeholder:** The `@since AUCTEENO_NEXT_PATCH_VERSION` tags in the code block below are literal placeholders. Task 25 Step 1 reads the current `aucteeno` version dynamically and computes the next patch — before running Task 25, do a sed replacement across the helper class file and the docblocks to substitute `AUCTEENO_NEXT_PATCH_VERSION` with the computed version string. Example:
+```bash
+NEXT_VERSION="<computed in Task 25 Step 1>"
+sed -i '' "s/AUCTEENO_NEXT_PATCH_VERSION/$NEXT_VERSION/g" includes/blocks/class-query-loop-location-filter.php
+```
+
+**Coverage note — the `! $has_product_ids` guard:** Spec §15 item 3 bullet 2 calls for a test asserting "the filter does not fire when `$has_product_ids` is true." With the helper-class restructure, that assertion moves out of Task 23 (which tests the helper in isolation and cannot see `$has_product_ids`) and into Task 24, where it is covered by a source-level test asserting the call to `Query_Loop_Location_Filter::apply()` in `render.php` physically sits inside an `if ( ! $has_product_ids )` block. Task 24 Step 4 adds this test. This is a deliberate trade-off: we lose behavioral runtime verification of the guard, but we gain a stable architectural assertion that fires at CI time without needing to include the procedural file.
+
 **Files:**
 - Create: `wp-content/plugins/aucteeno/includes/blocks/class-query-loop-location-filter.php`
 - Create: `wp-content/plugins/aucteeno/tests/Query_Loop_Location_Filter_Test.php`
@@ -2323,7 +2331,7 @@ Create `wp-content/plugins/aucteeno/includes/blocks/class-query-loop-location-fi
  * logic can be unit-tested in isolation.
  *
  * @package Aucteeno
- * @since 1.2.3
+ * @since AUCTEENO_NEXT_PATCH_VERSION
  */
 
 declare(strict_types=1);
@@ -2354,7 +2362,7 @@ final class Query_Loop_Location_Filter {
 		 * written into $query_args. Does not fire when the block is in product-IDs mode —
 		 * callers wrap this call in a ! $has_product_ids guard.
 		 *
-		 * @since 1.2.3
+		 * @since AUCTEENO_NEXT_PATCH_VERSION
 		 *
 		 * @param array $location   Two-element indexed array [ string $country, string $subdivision ].
 		 * @param array $attributes The block's resolved attributes array.
@@ -2456,26 +2464,84 @@ if ( ! $has_product_ids ) {
 }
 ```
 
-- [ ] **Step 4: Run the full test suite to verify nothing regressed**
+- [ ] **Step 4: Add a source-level test asserting the guard**
+
+Append this test to `tests/Query_Loop_Location_Filter_Test.php`. It reads `render.php` as text and asserts that the call to `Query_Loop_Location_Filter::apply()` physically sits inside an `if ( ! $has_product_ids )` block. This compensates for the fact that the helper-class pattern cannot observe the guard at runtime without re-introducing the fragile render.php integration test.
+
+```php
+	public function test_render_php_wraps_helper_call_in_has_product_ids_guard(): void {
+		$render_path = dirname( __DIR__ ) . '/blocks/query-loop/render.php';
+		$this->assertFileExists( $render_path );
+		$source = file_get_contents( $render_path );
+		$this->assertIsString( $source );
+
+		// Find the offset of the helper call.
+		$call_offset = strpos( $source, 'Query_Loop_Location_Filter::apply' );
+		$this->assertNotFalse( $call_offset, 'render.php must call Query_Loop_Location_Filter::apply' );
+
+		// Find the nearest preceding `if ( ! $has_product_ids )` opening.
+		$guard_offset = strrpos( substr( $source, 0, $call_offset ), 'if ( ! $has_product_ids )' );
+		$this->assertNotFalse( $guard_offset, 'Helper call must be preceded by if ( ! $has_product_ids )' );
+
+		// Between the guard and the call, there must be no closing `}` at the outer level.
+		// A simple sanity check: the substring between the guard and the call must contain
+		// an opening brace and must not contain a stray closing brace at the same level.
+		$between = substr( $source, $guard_offset, $call_offset - $guard_offset );
+		$this->assertStringContainsString( '{', $between, 'Guard block must be opened before helper call' );
+
+		// Brace balance between guard and call must be >= 1 (i.e., we're still inside the guard).
+		$opens  = substr_count( $between, '{' );
+		$closes = substr_count( $between, '}' );
+		$this->assertGreaterThan(
+			$closes,
+			$opens,
+			'Helper call must be inside the ! $has_product_ids block (open braces > close braces between guard and call)'
+		);
+	}
+```
+
+- [ ] **Step 5: Substitute `AUCTEENO_NEXT_PATCH_VERSION` placeholder**
+
+Before proceeding, substitute the placeholder in the helper class with the actual next version (computed in Task 25 Step 1 or, if running linearly, anticipate it):
+
+```bash
+CURRENT=$(awk '/^\s*\*\s*Version:/ {print $NF; exit}' aucteeno.php)
+# Compute next patch: increment the last segment.
+NEXT_VERSION=$(echo "$CURRENT" | awk -F. '{ $NF = $NF + 1; OFS = "."; print }')
+echo "Current: $CURRENT, Next: $NEXT_VERSION"
+sed -i '' "s/AUCTEENO_NEXT_PATCH_VERSION/$NEXT_VERSION/g" includes/blocks/class-query-loop-location-filter.php
+```
+
+Note: `sed -i ''` is the BSD/macOS syntax. On Linux, use `sed -i` (no empty string).
+
+Verify the substitution:
+
+```bash
+grep '@since' includes/blocks/class-query-loop-location-filter.php
+```
+
+Expected: both `@since` tags show a concrete version number, not the placeholder.
+
+- [ ] **Step 6: Run the full test suite to verify nothing regressed**
 
 ```bash
 ./vendor/bin/phpunit
 ```
 
-Expected: all tests pass. If anything regressed, STOP and investigate.
+Expected: all tests pass, including the new guard assertion test.
 
-- [ ] **Step 5: Run PHPCS on render.php**
+- [ ] **Step 7: Run PHPCS on render.php and the helper**
 
 ```bash
-./vendor/bin/phpcs blocks/query-loop/render.php
+./vendor/bin/phpcs blocks/query-loop/render.php includes/blocks/class-query-loop-location-filter.php
 ```
 
 Expected: no new errors. Pre-existing errors (if any) are not in scope — leave them.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add blocks/query-loop/render.php
+git add blocks/query-loop/render.php includes/blocks/class-query-loop-location-filter.php tests/Query_Loop_Location_Filter_Test.php
 git commit -m "feat(query-loop): wire aucteeno_query_loop_location filter in render.php
 
 Call Query_Loop_Location_Filter::apply() from within the
@@ -2484,7 +2550,11 @@ resolves \$location_country and \$location_subdivision and before
 they are written into \$query_args. Extension plugins can hook
 the new aucteeno_query_loop_location filter to override both
 values (e.g., aucteeno-nexus-geo-tagging, which applies
-Cloudflare-derived country/subdivision)."
+Cloudflare-derived country/subdivision).
+
+Also adds a source-level test asserting that the helper call
+physically sits inside the ! \$has_product_ids guard, and
+substitutes the @since version placeholder in the helper class."
 ```
 
 ### Task 25: Bump version and update changelog
