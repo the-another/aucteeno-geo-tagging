@@ -50,7 +50,8 @@ if ( version_compare( PHP_VERSION, '8.3', '<' ) ) {
 }
 
 // Minimum WordPress version check.
-if ( version_compare( get_bloginfo( 'version' ), '6.9', '<' ) ) {
+global $wp_version;
+if ( version_compare( $wp_version, '6.9', '<' ) ) {
 	add_action(
 		'admin_notices',
 		function () {
@@ -64,10 +65,11 @@ if ( version_compare( get_bloginfo( 'version' ), '6.9', '<' ) ) {
 	return;
 }
 
-// Autoloader.
-if ( file_exists( AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
-	require_once AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php';
+// Autoloader. Bail entirely if missing — classmap-autoloaded classes won't be available.
+if ( ! file_exists( AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
+	return;
 }
+require_once AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php';
 
 // Initialize plugin after Aucteeno and Aucteeno Nexus load.
 add_action(
@@ -79,5 +81,5 @@ add_action(
 		);
 		$geo_tagging->init();
 	},
-	30 // After aucteeno (default) and aucteeno-nexus (20).
+	30 // Priority 30: after aucteeno (priority 10) and aucteeno-nexus (priority 20).
 );
