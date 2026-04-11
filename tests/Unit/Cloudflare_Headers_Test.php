@@ -19,8 +19,9 @@ final class Cloudflare_Headers_Test extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		Monkey\setUp();
-		// wp_unslash is a pass-through for tests.
+		// wp_unslash and sanitize_text_field are pass-throughs for tests.
 		Functions\when( 'wp_unslash' )->returnArg();
+		Functions\when( 'sanitize_text_field' )->returnArg();
 		// Reset CF headers between tests.
 		unset( $_SERVER['HTTP_CF_IPCOUNTRY'], $_SERVER['HTTP_CF_REGION_CODE'] );
 	}
