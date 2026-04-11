@@ -3,7 +3,7 @@
  * Plugin Name: Aucteeno Geo-Tagging
  * Plugin URI: https://theanother.org/plugin/aucteeno-geo-tagging/
  * Description: Cloudflare geo-header based filtering for Aucteeno Query Loop blocks.
- * Version: 0.1.1
+ * Version: 0.1.2
  * Author: The Another
  * Author URI: https://theanother.org
  * Requires at least: 6.9
@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'AUCTEENO_GEO_TAGGING_VERSION', '0.1.1' );
+define( 'AUCTEENO_GEO_TAGGING_VERSION', '0.1.2' );
 define( 'AUCTEENO_GEO_TAGGING_PLUGIN_FILE', __FILE__ );
 define( 'AUCTEENO_GEO_TAGGING_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AUCTEENO_GEO_TAGGING_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

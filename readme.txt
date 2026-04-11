@@ -4,7 +4,7 @@ Tags: aucteeno, auction, cloudflare, geo, localization
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.3
-Stable tag: 0.1.1
+Stable tag: 0.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -32,6 +32,8 @@ limitation.
 
 == Changelog ==
 
+= 0.1.2 - 2026-04-11 =
+* Fixed: release zip was missing the Composer `vendor/` directory, causing the plugin to silently bail at the autoloader guard on fresh installs — the Geo-Tagging panel never appeared in the Aucteeno Query Loop block inspector. `vendor/` is now included in both the CI (`wp-scripts plugin-zip`) and dev-local (`make release`) packaging paths.
 
 = 0.1.1 - 2026-04-11 =
 * Docs: rewrote README.md as a user-facing plugin description with usage, FAQ, and an FSE-template troubleshooting note.

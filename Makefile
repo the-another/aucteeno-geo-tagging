@@ -34,6 +34,6 @@ release: install build
 	mkdir -p build
 	rm -rf build/aucteeno-geo-tagging
 	mkdir -p build/aucteeno-geo-tagging
-	cp -R aucteeno-geo-tagging.php includes dist README.md readme.txt \
+	cp -R aucteeno-geo-tagging.php includes dist vendor README.md readme.txt \
 		build/aucteeno-geo-tagging/
 	cd build && zip -r aucteeno-geo-tagging.zip aucteeno-geo-tagging
