@@ -41,7 +41,7 @@ Add an opt-in feature to the Aucteeno Query Loop block that filters listings by 
 
 The feature splits across two repos with a minimal contract between them.
 
-**`aucteeno` (base plugin)** — one new filter hook in `blocks/query-loop/render.php`. Nothing else. Delivered on a new feature branch `feat/query-loop-geo-tagging-hooks`.
+**`aucteeno` (base plugin)** — one new filter hook in `blocks/query-loop/render.php` (wrapped in a `! $has_product_ids` guard), defense-in-depth sanitization of the filter return value, a companion PHPUnit test, a patch-level version bump, and a changelog entry. Full scope is enumerated in §15. Delivered on a new feature branch `feat/query-loop-geo-tagging-hooks`.
 
 **`aucteeno-nexus-geo-tagging` (extension plugin)** — new plugin carrying all geo-tagging logic. Delivered on `master` since it is not yet released.
 
@@ -94,8 +94,8 @@ aucteeno-nexus-geo-tagging/
 
 Plugin file hooks `before_woocommerce_init` at priority 30 (after `aucteeno` default and `aucteeno-nexus` at 20), instantiates `Geo_Tagging`, calls `->init()`, which:
 
-1. Registers the PHP filter on `aucteeno_query_loop_location`.
-2. Enqueues the editor-side JS on `enqueue_block_editor_assets`.
+1. Registers `Geo_Tagging::filter_location()` on the `aucteeno_query_loop_location` filter at priority 10, 3 args.
+2. Registers `Geo_Tagging::enqueue_editor_assets()` on the `enqueue_block_editor_assets` action.
 
 No REST routes, no settings page, no admin menu. The entire admin UX is an Inspector panel on the Query Loop block.
 
@@ -130,26 +130,75 @@ $location = apply_filters(
 
 ### 5.2 Placement
 
-In `blocks/query-loop/render.php`:
-- **Inside** the `! $has_product_ids` path (never fires when the block is in product-IDs mode, which resets `$query_args` anyway).
-- **After** the existing fallback chain resolves `$location_country` and `$location_subdivision` (around current line 208).
-- **Before** the `if ( ! empty( $location_country ) ) { $query_args['country'] = ...; }` assignments.
+Inserted in `blocks/query-loop/render.php` between the existing location-resolution block (current lines 192–208, which sets `$location_country` and `$location_subdivision` via the attribute → context → archive chain) and the assignment block (current lines 210–215, which writes them into `$query_args`).
+
+**The filter call is wrapped in an explicit `! $has_product_ids` guard** so it does not fire at all when the block is in product-IDs mode. This is important: the existing `$has_product_ids` branch at lines 218–235 rebuilds `$query_args` from scratch, so any location filter output would be silently discarded downstream — but relying on that coincidence would be fragile and would waste cycles on the filter's bot-detection / CF-header read for a path where the result is guaranteed to be thrown away. An explicit guard is clearer.
+
+The resulting structure, as a diff against the current file:
+
+```diff
+ $location_subdivision = '';
+ if ( ! empty( $attributes['locationSubdivision'] ) ) {
+     $location_subdivision = sanitize_text_field( $attributes['locationSubdivision'] );
+ } elseif ( ! empty( $block->context['locationSubdivision'] ) ) {
+     $location_subdivision = sanitize_text_field( $block->context['locationSubdivision'] );
+ } elseif ( ! empty( $archive_location_subdivision ) ) {
+     $location_subdivision = $archive_location_subdivision;
+ }
+
++/**
++ * Filters the resolved location for the Aucteeno Query Loop block before querying.
++ *
++ * Does not fire when the block is in product-IDs mode — that branch rebuilds
++ * $query_args from scratch and ignores location filters entirely.
++ *
++ * @param array    $location   [ string $country, string $subdivision ].
++ * @param array    $attributes The block's resolved attributes array.
++ * @param WP_Block $block      The block instance (includes context).
++ * @return array   Two-element indexed array in the same shape.
++ */
++if ( ! $has_product_ids ) {
++    $filtered_location = apply_filters(
++        'aucteeno_query_loop_location',
++        array( $location_country, $location_subdivision ),
++        $attributes,
++        $block
++    );
++
++    if ( is_array( $filtered_location ) && 2 === count( $filtered_location ) ) {
++        if ( isset( $filtered_location[0] ) && is_string( $filtered_location[0] ) ) {
++            $location_country = sanitize_text_field( $filtered_location[0] );
++        }
++        if ( isset( $filtered_location[1] ) && is_string( $filtered_location[1] ) ) {
++            $location_subdivision = sanitize_text_field( $filtered_location[1] );
++        }
++    }
++}
++
+ if ( ! empty( $location_country ) ) {
+     $query_args['country'] = $location_country;
+ }
+ if ( ! empty( $location_subdivision ) ) {
+     $query_args['subdivision'] = $location_subdivision;
+ }
+```
+
+Line numbers in this spec are current-as-of `faca4f7` on `aucteeno` master. Implementers should use `git blame` to re-locate the insertion point if the file has drifted.
 
 ### 5.3 Return validation (defense in depth)
 
-```php
-if ( is_array( $location ) && count( $location ) === 2 ) {
-    $location_country     = is_string( $location[0] ) ? sanitize_text_field( $location[0] ) : $location_country;
-    $location_subdivision = is_string( $location[1] ) ? sanitize_text_field( $location[1] ) : $location_subdivision;
-}
-```
+Shown inline in the §5.2 diff. Key properties:
 
-Malformed filter returns fall through silently — the pre-filter values are used.
+- Return must be an `array` of exactly length 2. Anything else falls through silently, leaving pre-filter values intact.
+- Each element is independently type-checked before being consumed. A filter that returns `[ 'US', null ]` is partially accepted — the country updates, the subdivision keeps its pre-filter value.
+- Both elements are re-sanitized via `sanitize_text_field()` even though the extension should have done it already.
+
+Malformed filter returns never throw and never produce error output — the block renders as if the filter had not been hooked.
 
 ### 5.4 Scope boundaries
 
 - Filter does **not** receive `$query_args`. Scope is strictly the location pair.
-- Filter does **not** fire when `$has_product_ids` is true (product-IDs branch short-circuits location filtering entirely).
+- Filter does **not** fire when `$has_product_ids` is true — the explicit guard in §5.2 short-circuits it entirely for that branch.
 - Filter does **not** interact with the REST pagination endpoint. Infinite scroll requests carry `country` / `subdivision` query params baked in at initial server render, so the first render's decision locks in for the session.
 
 ### 5.5 Filter naming rationale
@@ -166,11 +215,11 @@ Pure, stateless, no WordPress dependencies. Reads `$_SERVER` directly and valida
 final class Cloudflare_Headers {
 
     public function get_country(): string {
-        $value = $_SERVER['HTTP_CF_IPCOUNTRY'] ?? '';
-        if ( ! is_string( $value ) ) {
+        $raw = $_SERVER['HTTP_CF_IPCOUNTRY'] ?? '';
+        if ( ! is_string( $raw ) ) {
             return '';
         }
-        $value = strtoupper( trim( $value ) );
+        $value = strtoupper( trim( wp_unslash( $raw ) ) );
         if ( ! preg_match( '/^[A-Z]{2}$/', $value ) ) {
             return '';
         }
@@ -185,11 +234,11 @@ final class Cloudflare_Headers {
         if ( '' === $country ) {
             return '';
         }
-        $value = $_SERVER['HTTP_CF_REGION_CODE'] ?? '';
-        if ( ! is_string( $value ) ) {
+        $raw = $_SERVER['HTTP_CF_REGION_CODE'] ?? '';
+        if ( ! is_string( $raw ) ) {
             return '';
         }
-        $value = strtoupper( trim( $value ) );
+        $value = strtoupper( trim( wp_unslash( $raw ) ) );
         if ( ! preg_match( '/^[A-Z0-9]{1,3}$/', $value ) ) {
             return '';
         }
@@ -197,6 +246,8 @@ final class Cloudflare_Headers {
     }
 }
 ```
+
+`wp_unslash()` is called before the regex even though the superglobal values would be rejected by the regex anyway — it's cheap, satisfies `WordPress.Security.ValidatedSanitizedInput` out of the box, and matches the pattern used elsewhere in `render.php` (e.g., line 114).
 
 ### 6.2 Header sources
 
@@ -235,9 +286,10 @@ final class Bot_Detector {
 
     public function is_bot( ?string $user_agent = null ): bool {
         if ( null === $user_agent ) {
-            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+            $raw        = $_SERVER['HTTP_USER_AGENT'] ?? '';
+            $user_agent = is_string( $raw ) ? wp_unslash( $raw ) : '';
         }
-        if ( ! is_string( $user_agent ) || '' === $user_agent ) {
+        if ( '' === $user_agent ) {
             return true; // No UA → treat as bot.
         }
         $ua_lower = strtolower( $user_agent );
@@ -284,7 +336,7 @@ public function filter_location( array $location, array $attributes, \WP_Block $
     }
     $subdivision = $this->cf->get_subdivision( $country );
 
-    // 4. CF wins (decision §10.1). Return the new values; base re-sanitizes.
+    // 4. CF wins (§10, decision 1). Return the new values; base re-sanitizes.
     return [ $country, $subdivision ];
 }
 ```
@@ -369,7 +421,7 @@ These are the explicit decisions made during design review, preserved for implem
 7. **Taxonomy archive override is accepted.** When geo-tagging is enabled on a block placed on `/aucteeno-location/canada/` and the visitor has `CF-IPCountry: US`, the visitor sees US auctions. Documented as expected behavior.
 8. **Filter no-ops silently on missing/invalid CF headers.** No debug logging. Non-Cloudflare sites get no behavior change and no errors.
 9. **No try/catch safety net** in the filter callback. The code is straight-line with no throwing branches.
-10. **Filter placed inside the `! $has_product_ids` branch** — blocks in product-IDs mode are unaffected.
+10. **Filter wrapped in explicit `! $has_product_ids` guard** in `render.php` — blocks in product-IDs mode never invoke the filter at all. Avoids relying on the downstream `$query_args` reset as an implicit safety net.
 11. **Starting version: `0.1.0`.** First stable release will be `1.0.0` per `aucteeno-nexus` pattern.
 12. **CI: depot runners, PHPUnit only, PHP 8.3 only.** No Playwright for Gutenberg panel, no matrix. Matches `aucteeno-nexus`.
 
@@ -383,7 +435,7 @@ These are the explicit decisions made during design review, preserved for implem
 | 4 | Malformed region code (injection) | Regex rejects, returns empty subdivision. | `Cloudflare_Headers_Test::test_rejects_malformed_region` |
 | 5 | Empty User-Agent | Treated as bot, feature skipped unless affects-bots. | `Bot_Detector_Test::test_empty_user_agent_is_bot` |
 | 6 | False-positive UA containing "Robot" | Classified as bot. Accepted risk. | N/A |
-| 7 | Geo-tagged block with `productIds` context | Filter does not fire (placed inside `! $has_product_ids` branch). | Verified at implementation time. |
+| 7 | Geo-tagged block with `productIds` context | Filter does not fire — the `! $has_product_ids` guard in `render.php` short-circuits it. | Covered by the base-plugin PHPUnit test (§15 item 3). |
 | 8 | Taxonomy archive + geo-tagging enabled | CF overrides archive — accepted behavior. | `Geo_Tagging_Test` (stubbed). |
 | 9 | Multiple Query Loops, only some geo-tagged | Filter respects each block's attributes independently. | `Geo_Tagging_Test::test_only_affects_enabled_blocks` |
 | 10 | Editor preview (Gutenberg SSR) | Reflects admin's own Cloudflare location. Documented limitation. | N/A |
@@ -520,11 +572,15 @@ Copied from `aucteeno-nexus/.github/workflows/` and adapted.
 
 Single PR on branch `feat/query-loop-geo-tagging-hooks`:
 
-1. Add the `apply_filters( 'aucteeno_query_loop_location', ... )` call inside the `! $has_product_ids` path in `blocks/query-loop/render.php`.
-2. Add defense-in-depth sanitization of the filter return value (§5.3).
-3. Add a PHPUnit test asserting the filter fires with the right arguments and that a non-array return is ignored.
+1. Add the `apply_filters( 'aucteeno_query_loop_location', ... )` call to `blocks/query-loop/render.php`, wrapped in an explicit `if ( ! $has_product_ids )` guard, placed between the location-resolution block (lines 192–208) and the assignment block (lines 210–215). Full diff shown in §5.2.
+2. Add defense-in-depth sanitization of the filter return value (inside the same guarded block — shown in the §5.2 diff).
+3. Add a PHPUnit test for the new behavior asserting:
+   - The filter fires with the expected `[ country, subdivision ]`, `$attributes`, `$block` arguments when `$has_product_ids` is false.
+   - The filter does **not** fire when `$has_product_ids` is true.
+   - A non-array or wrong-length filter return is ignored (pre-filter values flow through to `$query_args`).
+   - A partial filter return (e.g., `[ 'US', null ]`) accepts the valid element and falls through on the invalid one.
 4. Version bump `aucteeno.php` (patch bump: `1.2.2` → `1.2.3`).
-5. Add a `CHANGELOG.md` entry.
+5. Add a `CHANGELOG.md` entry noting the new filter hook and the minimum extension plugin requirement.
 
 No other files touched. No new dependencies. No other block changes.
 
@@ -536,3 +592,4 @@ No other files touched. No new dependencies. No other block changes.
 - **Editor preview:** reflects the admin's own Cloudflare location. There is no "simulate country X" UI.
 - **Taxonomy archive pages:** when geo-tagging is enabled on a block placed on an `aucteeno-location` taxonomy archive, the Cloudflare location overrides the archive's country. This is intentional.
 - **Zero results:** if the visitor's country has no matching auctions, the block shows its "No auctions found." empty state. This is correct behavior.
+- **Header forgery on non-Cloudflare sites:** if the plugin is installed on a site that is not behind Cloudflare, a client can forge `CF-IPCountry` / `Cf-Region-Code` directly to see a specific country's auctions. This is accepted — the damage surface is "an attacker can see what any country's visitor would see," which is already possible via the existing REST pagination endpoint's `country` query param. Not a security issue, but worth noting for operators who might be tempted to install the plugin without fronting the site with Cloudflare.
