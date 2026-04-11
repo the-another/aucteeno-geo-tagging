@@ -9,7 +9,11 @@
         "start": "wp-scripts start assets/js/query-loop-inspector.js --output-path=dist",
         "lint:js": "wp-scripts lint-js assets/js",
         "format": "wp-scripts format assets/js",
-        "plugin-zip": "wp-scripts plugin-zip"
+        "plugin-zip": "npm run build && wp-scripts plugin-zip > /dev/null 2>&1 && node scripts/version-zip.js",
+        "version": "node scripts/version-bump.js && npm install",
+        "version:patch": "node scripts/version-bump.js patch && npm install",
+        "version:minor": "node scripts/version-bump.js minor && npm install",
+        "version:major": "node scripts/version-bump.js major && npm install"
     },
     "devDependencies": {
         "@wordpress/scripts": "^30.0.0"

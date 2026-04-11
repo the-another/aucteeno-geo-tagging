@@ -95,7 +95,6 @@ jobs:
         run: |
           composer install --no-dev --prefer-dist --no-progress
           npm ci
-          npm run build
           npm run plugin-zip
 
       - name: Create and push tag
@@ -111,4 +110,6 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           generate_release_notes: true
-          files: aucteeno-geo-tagging.zip
+          files: |
+            build/aucteeno-geo-tagging-${{ steps.version.outputs.version }}.zip
+            build/aucteeno-geo-tagging.zip
