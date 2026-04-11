@@ -5,13 +5,13 @@
  * Composes Cloudflare_Headers and Bot_Detector to produce a filter callback
  * for aucteeno_query_loop_location. Owns the block-editor asset enqueue hook.
  *
- * @package Aucteeno_Nexus_Geo_Tagging
+ * @package Aucteeno_Geo_Tagging
  * @since 0.1.0
  */
 
 declare(strict_types=1);
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging;
 
 /**
  * Wires the aucteeno_query_loop_location filter and the editor JS enqueue.
@@ -106,23 +106,23 @@ final class Geo_Tagging {
 	 * is missing (e.g., plugin installed without running `npm run build`).
 	 */
 	public function enqueue_editor_assets(): void {
-		$asset_path = AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_DIR . 'dist/query-loop-inspector.asset.php';
+		$asset_path = AUCTEENO_GEO_TAGGING_PLUGIN_DIR . 'dist/query-loop-inspector.asset.php';
 		if ( ! file_exists( $asset_path ) ) {
 			return;
 		}
 
 		$asset = require $asset_path;
 		wp_enqueue_script(
-			'aucteeno-nexus-geo-tagging-inspector',
-			AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_URL . 'dist/query-loop-inspector.js',
+			'aucteeno-geo-tagging-inspector',
+			AUCTEENO_GEO_TAGGING_PLUGIN_URL . 'dist/query-loop-inspector.js',
 			$asset['dependencies'] ?? array(),
-			$asset['version'] ?? AUCTEENO_NEXUS_GEO_TAGGING_VERSION,
+			$asset['version'] ?? AUCTEENO_GEO_TAGGING_VERSION,
 			true
 		);
 
 		wp_set_script_translations(
-			'aucteeno-nexus-geo-tagging-inspector',
-			'aucteeno-nexus-geo-tagging'
+			'aucteeno-geo-tagging-inspector',
+			'aucteeno-geo-tagging'
 		);
 	}
 }

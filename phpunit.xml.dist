@@ -13,7 +13,7 @@
          processIsolation="false"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="Aucteeno Nexus Geo-Tagging Test Suite">
+        <testsuite name="Aucteeno Geo-Tagging Test Suite">
             <directory>./tests</directory>
         </testsuite>
     </testsuites>

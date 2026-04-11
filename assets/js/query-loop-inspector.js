@@ -1,5 +1,5 @@
 /**
- * Aucteeno Nexus Geo-Tagging — Query Loop Inspector.
+ * Aucteeno Geo-Tagging — Query Loop Inspector.
  *
  * Adds two block attributes (geoTaggingEnabled, geoTaggingAffectsBots) to
  * the aucteeno/query-loop block at runtime via blocks.registerBlockType, and
@@ -14,7 +14,7 @@ import { Fragment, createElement } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 const BLOCK_NAME = 'aucteeno/query-loop';
-const FILTER_NAMESPACE = 'aucteeno-nexus-geo-tagging';
+const FILTER_NAMESPACE = 'aucteeno-geo-tagging';
 
 /**
  * Register the two new block attributes on aucteeno/query-loop.
@@ -72,20 +72,17 @@ const withGeoTaggingInspector = createHigherOrderComponent( ( BlockEdit ) => {
 				createElement(
 					PanelBody,
 					{
-						title: __(
-							'Geo-Tagging',
-							'aucteeno-nexus-geo-tagging'
-						),
+						title: __( 'Geo-Tagging', 'aucteeno-geo-tagging' ),
 						initialOpen: false,
 					},
 					createElement( ToggleControl, {
 						label: __(
 							'Enable geo-tagging',
-							'aucteeno-nexus-geo-tagging'
+							'aucteeno-geo-tagging'
 						),
 						help: __(
 							"When enabled, the visitor's Cloudflare-detected country and region override any manually set location filters. The editor preview reflects your own location.",
-							'aucteeno-nexus-geo-tagging'
+							'aucteeno-geo-tagging'
 						),
 						checked: !! geoTaggingEnabled,
 						onChange: ( value ) =>
@@ -95,11 +92,11 @@ const withGeoTaggingInspector = createHigherOrderComponent( ( BlockEdit ) => {
 						createElement( ToggleControl, {
 							label: __(
 								'Also apply to bots',
-								'aucteeno-nexus-geo-tagging'
+								'aucteeno-geo-tagging'
 							),
 							help: __(
 								'By default, detected bots (search crawlers, social previewers) bypass geo-tagging so they see the default content. Enable this to apply geo-tagging to bots too.',
-								'aucteeno-nexus-geo-tagging'
+								'aucteeno-geo-tagging'
 							),
 							checked: !! geoTaggingAffectsBots,
 							onChange: ( value ) =>

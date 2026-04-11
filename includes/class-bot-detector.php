@@ -4,13 +4,13 @@
  *
  * User-Agent heuristic for detecting crawlers, previewers, and headless browsers.
  *
- * @package Aucteeno_Nexus_Geo_Tagging
+ * @package Aucteeno_Geo_Tagging
  * @since 0.1.0
  */
 
 declare(strict_types=1);
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging;
 
 /**
  * Detects bot traffic based on a curated list of User-Agent substrings.

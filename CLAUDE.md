@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Project Overview
 
-`aucteeno-nexus-geo-tagging` is a lightweight WordPress extension plugin that adds
+`aucteeno-geo-tagging` is a lightweight WordPress extension plugin that adds
 opt-in Cloudflare-header-based country/subdivision filtering to the Aucteeno Query
 Loop block.
 
@@ -12,8 +12,8 @@ Loop block.
 
 Before making changes, read:
 
-- **Design spec:** `docs/superpowers/specs/2026-04-11-aucteeno-nexus-geo-tagging-design.md`
-- **Implementation plan:** `docs/superpowers/plans/2026-04-11-aucteeno-nexus-geo-tagging-implementation.md`
+- **Design spec:** `docs/superpowers/specs/2026-04-11-aucteeno-geo-tagging-design.md`
+- **Implementation plan:** `docs/superpowers/plans/2026-04-11-aucteeno-geo-tagging-implementation.md`
 
 These documents are the source of truth for the plugin's architecture.
 
@@ -43,7 +43,7 @@ The editor UI (two ToggleControls in a PanelBody) is injected into the existing
 - PHP 8.3+, WordPress 6.9+.
 - WordPress Coding Standards + VIPCS ruleset.
 - `class-{kebab-name}.php` file naming.
-- Namespace: `The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging`.
+- Namespace: `The_Another\Plugin\Aucteeno_Geo_Tagging`.
 - PHPUnit 11 + Brain Monkey for tests, no WordPress loaded.
 
 ## Don't

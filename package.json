@@ -1,5 +1,5 @@
 {
-    "name": "aucteeno-nexus-geo-tagging",
+    "name": "aucteeno-geo-tagging",
     "version": "0.1.0",
     "description": "Cloudflare geo-header based filtering for Aucteeno Query Loop blocks.",
     "private": true,
@@ -15,7 +15,7 @@
         "@wordpress/scripts": "^30.0.0"
     },
     "files": [
-        "aucteeno-nexus-geo-tagging.php",
+        "aucteeno-geo-tagging.php",
         "includes/",
         "dist/",
         "readme.txt",

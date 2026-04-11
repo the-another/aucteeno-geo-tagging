@@ -1,4 +1,4 @@
-# Aucteeno Nexus Geo-Tagging
+# Aucteeno Geo-Tagging
 
 Cloudflare geo-header based filtering for the Aucteeno Query Loop block.
 
@@ -26,12 +26,12 @@ make test          # run PHPUnit
 make lint          # run PHPCS
 make format        # auto-fix PHPCS issues
 make all           # install-dev + build + lint + test
-make release       # produce build/aucteeno-nexus-geo-tagging.zip
+make release       # produce build/aucteeno-geo-tagging.zip
 ```
 
 ## Architecture
 
-See `docs/superpowers/specs/2026-04-11-aucteeno-nexus-geo-tagging-design.md` for
+See `docs/superpowers/specs/2026-04-11-aucteeno-geo-tagging-design.md` for
 the full design rationale. In short:
 
 - Three PHP classes (`Cloudflare_Headers`, `Bot_Detector`, `Geo_Tagging`), no DI

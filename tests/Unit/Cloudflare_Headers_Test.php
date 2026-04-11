@@ -2,17 +2,17 @@
 /**
  * Tests for Cloudflare_Headers.
  *
- * @package The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests\Unit
+ * @package The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit
  */
 
 declare(strict_types=1);
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests\Unit;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit;
 
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
-use The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Cloudflare_Headers;
+use The_Another\Plugin\Aucteeno_Geo_Tagging\Cloudflare_Headers;
 
 final class Cloudflare_Headers_Test extends TestCase {
 

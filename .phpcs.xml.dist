@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<ruleset name="Aucteeno Nexus Geo-Tagging">
-    <description>WordPress Coding Standards and Automattic VIP Coding Standards for Aucteeno Nexus Geo-Tagging plugin</description>
+<ruleset name="Aucteeno Geo-Tagging">
+    <description>WordPress Coding Standards and Automattic VIP Coding Standards for Aucteeno Geo-Tagging plugin</description>
 
     <file>./includes</file>
-    <file>./aucteeno-nexus-geo-tagging.php</file>
+    <file>./aucteeno-geo-tagging.php</file>
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>*/node_modules/*</exclude-pattern>
     <exclude-pattern>*/dist/*</exclude-pattern>

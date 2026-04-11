@@ -5,19 +5,19 @@
  * Uses real Cloudflare_Headers and Bot_Detector instances driven by $_SERVER,
  * since both classes are pure and trivially controllable via the superglobal.
  *
- * @package The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests\Unit
+ * @package The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit
  */
 
 declare(strict_types=1);
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests\Unit;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit;
 
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
-use The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Bot_Detector;
-use The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Cloudflare_Headers;
-use The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Geo_Tagging;
+use The_Another\Plugin\Aucteeno_Geo_Tagging\Bot_Detector;
+use The_Another\Plugin\Aucteeno_Geo_Tagging\Cloudflare_Headers;
+use The_Another\Plugin\Aucteeno_Geo_Tagging\Geo_Tagging;
 
 final class Geo_Tagging_Test extends TestCase {
 

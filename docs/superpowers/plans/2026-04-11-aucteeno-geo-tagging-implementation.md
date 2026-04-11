@@ -1,14 +1,14 @@
-# Aucteeno Nexus Geo-Tagging Implementation Plan
+# Aucteeno Geo-Tagging Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the `aucteeno-nexus-geo-tagging` WordPress plugin — an opt-in Cloudflare-header-based country/subdivision filter for the Aucteeno Query Loop block — and add one filter hook to the base `aucteeno` plugin to make it work.
+**Goal:** Build the `aucteeno-geo-tagging` WordPress plugin — an opt-in Cloudflare-header-based country/subdivision filter for the Aucteeno Query Loop block — and add one filter hook to the base `aucteeno` plugin to make it work.
 
 **Architecture:** Lightweight extension plugin with three PHP classes (no DI container, no Mozart), autoloaded via PSR-4. The base `aucteeno` plugin gets one new filter (`aucteeno_query_loop_location`) wrapped in a `! $has_product_ids` guard in `blocks/query-loop/render.php`. Editor UI is injected via the standard WordPress `blocks.registerBlockType` + `editor.BlockEdit` JS filters — no base-plugin block.json changes.
 
 **Tech Stack:** PHP 8.3, WordPress 6.9+, PHPUnit 11, Brain Monkey, `@wordpress/scripts` build pipeline, `@wordpress/hooks` / `@wordpress/components` / `@wordpress/block-editor` / `@wordpress/element`, Docker-wrapped Makefile, depot-ubuntu-24.04 GitHub runners.
 
-**Source of truth:** The design spec at `wp-content/plugins/aucteeno-nexus-geo-tagging/docs/superpowers/specs/2026-04-11-aucteeno-nexus-geo-tagging-design.md`. If anything in this plan contradicts the spec, the spec wins — stop and ask.
+**Source of truth:** The design spec at `wp-content/plugins/aucteeno-geo-tagging/docs/superpowers/specs/2026-04-11-aucteeno-geo-tagging-design.md`. If anything in this plan contradicts the spec, the spec wins — stop and ask.
 
 ---
 
@@ -16,7 +16,7 @@
 
 This plan modifies **two repositories**:
 
-1. **`wp-content/plugins/aucteeno-nexus-geo-tagging/`** — new plugin, most tasks. Work directly on `master` (new plugin, not yet released).
+1. **`wp-content/plugins/aucteeno-geo-tagging/`** — new plugin, most tasks. Work directly on `master` (new plugin, not yet released).
 2. **`wp-content/plugins/aucteeno/`** — base plugin, one small feature-branch PR. Work on branch `feat/query-loop-geo-tagging-hooks`.
 
 Commit to the correct repo per task. Each task explicitly names which repo it's in.
@@ -25,10 +25,10 @@ Commit to the correct repo per task. Each task explicitly names which repo it's 
 
 Before starting Task 1, verify:
 
-1. **`aucteeno-nexus-geo-tagging` already exists as a git repository** with remote `origin` pointing to `git@github.com:aucteeno/aucteeno-nexus-geo-tagging.git`, and is currently on `master`. Verify with:
+1. **`aucteeno-geo-tagging` already exists as a git repository** with remote `origin` pointing to `git@github.com:aucteeno/aucteeno-geo-tagging.git`, and is currently on `master`. Verify with:
    ```bash
-   cd wp-content/plugins/aucteeno-nexus-geo-tagging
-   git remote -v     # must show aucteeno/aucteeno-nexus-geo-tagging
+   cd wp-content/plugins/aucteeno-geo-tagging
+   git remote -v     # must show aucteeno/aucteeno-geo-tagging
    git branch --show-current    # must show "master"
    git status         # working tree should be clean; the only tracked content is docs/
    ```
@@ -42,11 +42,11 @@ Before starting Task 1, verify:
 
 ## File structure — what each file is responsible for
 
-### `aucteeno-nexus-geo-tagging` (new plugin)
+### `aucteeno-geo-tagging` (new plugin)
 
 | File | Responsibility |
 |---|---|
-| `aucteeno-nexus-geo-tagging.php` | Plugin header, constants, PHP/WP version check, Composer autoloader include, boot hook on `before_woocommerce_init` priority 30. |
+| `aucteeno-geo-tagging.php` | Plugin header, constants, PHP/WP version check, Composer autoloader include, boot hook on `before_woocommerce_init` priority 30. |
 | `composer.json` | PSR-4 autoload, dev dependencies (PHPUnit, Brain Monkey, WPCS, VIPCS), scripts. |
 | `package.json` | `@wordpress/scripts` dev dep, build/start/lint scripts. |
 | `phpunit.xml.dist` | PHPUnit 11 config, tests in `./tests`, source in `./includes`. |
@@ -84,13 +84,13 @@ Before starting Task 1, verify:
 
 ## Chunk 1: Scaffold the new plugin
 
-**Repo:** `wp-content/plugins/aucteeno-nexus-geo-tagging/` (master)
+**Repo:** `wp-content/plugins/aucteeno-geo-tagging/` (master)
 
 ### Task 1: Create `.gitignore` and `.dockerignore`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/.gitignore`
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/.dockerignore`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/.gitignore`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/.dockerignore`
 
 - [ ] **Step 1: Write `.gitignore`**
 
@@ -120,7 +120,7 @@ build/
 - [ ] **Step 3: Commit**
 
 ```bash
-cd wp-content/plugins/aucteeno-nexus-geo-tagging
+cd wp-content/plugins/aucteeno-geo-tagging
 git add .gitignore .dockerignore
 git commit -m "chore: add gitignore and dockerignore"
 ```
@@ -128,13 +128,13 @@ git commit -m "chore: add gitignore and dockerignore"
 ### Task 2: Create `composer.json`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/composer.json`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/composer.json`
 
 - [ ] **Step 1: Write the file**
 
 ```json
 {
-    "name": "theanother/aucteeno-nexus-geo-tagging",
+    "name": "theanother/aucteeno-geo-tagging",
     "description": "Cloudflare geo-header based filtering for Aucteeno Query Loop blocks.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
@@ -144,10 +144,10 @@ git commit -m "chore: add gitignore and dockerignore"
         "email": "hello@theanother.org",
         "url": "https://theanother.org"
     },
-    "homepage": "https://theanother.org/plugin/aucteeno-nexus-geo-tagging/",
+    "homepage": "https://theanother.org/plugin/aucteeno-geo-tagging/",
     "support": {
-        "issues": "https://github.com/aucteeno/aucteeno-nexus-geo-tagging/issues",
-        "source": "https://github.com/aucteeno/aucteeno-nexus-geo-tagging"
+        "issues": "https://github.com/aucteeno/aucteeno-geo-tagging/issues",
+        "source": "https://github.com/aucteeno/aucteeno-geo-tagging"
     },
     "require": {
         "php": ">=8.3"
@@ -167,7 +167,7 @@ git commit -m "chore: add gitignore and dockerignore"
     },
     "autoload-dev": {
         "psr-4": {
-            "The_Another\\Plugin\\Aucteeno_Nexus_Geo_Tagging\\Tests\\": "tests/"
+            "The_Another\\Plugin\\Aucteeno_Geo_Tagging\\Tests\\": "tests/"
         }
     },
     "config": {
@@ -196,7 +196,7 @@ git commit -m "chore: add composer.json with dev deps and autoload"
 ### Task 3: Create `phpunit.xml.dist`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/phpunit.xml.dist`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/phpunit.xml.dist`
 
 - [ ] **Step 1: Write the file**
 
@@ -216,7 +216,7 @@ git commit -m "chore: add composer.json with dev deps and autoload"
          processIsolation="false"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="Aucteeno Nexus Geo-Tagging Test Suite">
+        <testsuite name="Aucteeno Geo-Tagging Test Suite">
             <directory>./tests</directory>
         </testsuite>
     </testsuites>
@@ -246,17 +246,17 @@ git commit -m "chore: add phpunit.xml.dist"
 ### Task 4: Create `.phpcs.xml.dist`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/.phpcs.xml.dist`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/.phpcs.xml.dist`
 
 - [ ] **Step 1: Write the file**
 
 ```xml
 <?xml version="1.0"?>
-<ruleset name="Aucteeno Nexus Geo-Tagging">
-    <description>WordPress Coding Standards and Automattic VIP Coding Standards for Aucteeno Nexus Geo-Tagging plugin</description>
+<ruleset name="Aucteeno Geo-Tagging">
+    <description>WordPress Coding Standards and Automattic VIP Coding Standards for Aucteeno Geo-Tagging plugin</description>
 
     <file>./includes</file>
-    <file>./aucteeno-nexus-geo-tagging.php</file>
+    <file>./aucteeno-geo-tagging.php</file>
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>*/node_modules/*</exclude-pattern>
     <exclude-pattern>*/dist/*</exclude-pattern>
@@ -298,12 +298,12 @@ git commit -m "chore: add phpcs ruleset"
 ### Task 5: Install Composer dependencies
 
 **Files:**
-- Touches: `wp-content/plugins/aucteeno-nexus-geo-tagging/vendor/` (git-ignored), `composer.lock` (committed)
+- Touches: `wp-content/plugins/aucteeno-geo-tagging/vendor/` (git-ignored), `composer.lock` (committed)
 
 - [ ] **Step 1: Run composer install**
 
 ```bash
-cd wp-content/plugins/aucteeno-nexus-geo-tagging
+cd wp-content/plugins/aucteeno-geo-tagging
 composer install
 ```
 
@@ -324,18 +324,18 @@ git add composer.lock
 git commit -m "chore: lock composer dependencies"
 ```
 
-### Task 6: Create main plugin file `aucteeno-nexus-geo-tagging.php`
+### Task 6: Create main plugin file `aucteeno-geo-tagging.php`
 
 **Files:**
-- Modify: `wp-content/plugins/aucteeno-nexus-geo-tagging/aucteeno-nexus-geo-tagging.php` (currently a 6-byte stub)
+- Modify: `wp-content/plugins/aucteeno-geo-tagging/aucteeno-geo-tagging.php` (currently a 6-byte stub)
 
 - [ ] **Step 1: Replace the stub with the full plugin file**
 
 ```php
 <?php
 /**
- * Plugin Name: Aucteeno Nexus Geo-Tagging
- * Plugin URI: https://theanother.org/plugin/aucteeno-nexus-geo-tagging/
+ * Plugin Name: Aucteeno Geo-Tagging
+ * Plugin URI: https://theanother.org/plugin/aucteeno-geo-tagging/
  * Description: Cloudflare geo-header based filtering for Aucteeno Query Loop blocks.
  * Version: 0.1.0
  * Author: The Another
@@ -343,30 +343,30 @@ git commit -m "chore: lock composer dependencies"
  * Requires at least: 6.9
  * Requires PHP: 8.3
  * Requires Plugins: aucteeno
- * Text Domain: aucteeno-nexus-geo-tagging
+ * Text Domain: aucteeno-geo-tagging
  * Domain Path: /languages
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * GitHub Plugin URI: https://github.com/aucteeno/aucteeno-nexus-geo-tagging
+ * GitHub Plugin URI: https://github.com/aucteeno/aucteeno-geo-tagging
  * Primary Branch: master
  * Release Asset: true
  *
- * @package Aucteeno_Nexus_Geo_Tagging
+ * @package Aucteeno_Geo_Tagging
  * @since 0.1.0
  */
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 // Define plugin constants.
-define( 'AUCTEENO_NEXUS_GEO_TAGGING_VERSION', '0.1.0' );
-define( 'AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_FILE', __FILE__ );
-define( 'AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+define( 'AUCTEENO_GEO_TAGGING_VERSION', '0.1.0' );
+define( 'AUCTEENO_GEO_TAGGING_PLUGIN_FILE', __FILE__ );
+define( 'AUCTEENO_GEO_TAGGING_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'AUCTEENO_GEO_TAGGING_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'AUCTEENO_GEO_TAGGING_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 // Minimum PHP version check.
 if ( version_compare( PHP_VERSION, '8.3', '<' ) ) {
@@ -375,7 +375,7 @@ if ( version_compare( PHP_VERSION, '8.3', '<' ) ) {
 		function () {
 			?>
 			<div class="notice notice-error">
-				<p><?php echo esc_html( 'Aucteeno Nexus Geo-Tagging requires PHP 8.3 or higher. Please upgrade your PHP version.' ); ?></p>
+				<p><?php echo esc_html( 'Aucteeno Geo-Tagging requires PHP 8.3 or higher. Please upgrade your PHP version.' ); ?></p>
 			</div>
 			<?php
 		}
@@ -390,7 +390,7 @@ if ( version_compare( get_bloginfo( 'version' ), '6.9', '<' ) ) {
 		function () {
 			?>
 			<div class="notice notice-error">
-				<p><?php echo esc_html( 'Aucteeno Nexus Geo-Tagging requires WordPress 6.9 or higher. Please upgrade WordPress.' ); ?></p>
+				<p><?php echo esc_html( 'Aucteeno Geo-Tagging requires WordPress 6.9 or higher. Please upgrade WordPress.' ); ?></p>
 			</div>
 			<?php
 		}
@@ -399,8 +399,8 @@ if ( version_compare( get_bloginfo( 'version' ), '6.9', '<' ) ) {
 }
 
 // Autoloader.
-if ( file_exists( AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
-	require_once AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php';
+if ( file_exists( AUCTEENO_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
+	require_once AUCTEENO_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php';
 }
 
 // Initialize plugin after Aucteeno and Aucteeno Nexus load.
@@ -420,7 +420,7 @@ add_action(
 - [ ] **Step 2: Verify PHPCS passes on the file**
 
 ```bash
-./vendor/bin/phpcs aucteeno-nexus-geo-tagging.php
+./vendor/bin/phpcs aucteeno-geo-tagging.php
 ```
 
 Expected: no errors (the three referenced classes don't exist yet, but PHPCS doesn't resolve class names — it only checks coding standards).
@@ -428,7 +428,7 @@ Expected: no errors (the three referenced classes don't exist yet, but PHPCS doe
 - [ ] **Step 3: Commit**
 
 ```bash
-git add aucteeno-nexus-geo-tagging.php
+git add aucteeno-geo-tagging.php
 git commit -m "feat: add plugin header and boot hook"
 ```
 
@@ -436,21 +436,21 @@ git commit -m "feat: add plugin header and boot hook"
 
 ## Chunk 2: `Cloudflare_Headers` class (TDD)
 
-**Repo:** `wp-content/plugins/aucteeno-nexus-geo-tagging/` (master)
+**Repo:** `wp-content/plugins/aucteeno-geo-tagging/` (master)
 
 ### Task 7: Create test bootstrap
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/tests/bootstrap.php`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/tests/bootstrap.php`
 
 - [ ] **Step 1: Write the bootstrap**
 
 ```php
 <?php
 /**
- * PHPUnit bootstrap file for Aucteeno Nexus Geo-Tagging plugin tests.
+ * PHPUnit bootstrap file for Aucteeno Geo-Tagging plugin tests.
  *
- * @package The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests
+ * @package The_Another\Plugin\Aucteeno_Geo_Tagging\Tests
  */
 
 declare(strict_types=1);
@@ -473,7 +473,7 @@ git commit -m "test: add phpunit bootstrap"
 ### Task 8: Write failing tests for `Cloudflare_Headers`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/tests/Unit/Cloudflare_Headers_Test.php`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/tests/Unit/Cloudflare_Headers_Test.php`
 
 - [ ] **Step 1: Write the test file**
 
@@ -482,17 +482,17 @@ git commit -m "test: add phpunit bootstrap"
 /**
  * Tests for Cloudflare_Headers.
  *
- * @package The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests\Unit
+ * @package The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit
  */
 
 declare(strict_types=1);
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests\Unit;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit;
 
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
-use The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Cloudflare_Headers;
+use The_Another\Plugin\Aucteeno_Geo_Tagging\Cloudflare_Headers;
 
 final class Cloudflare_Headers_Test extends TestCase {
 
@@ -589,7 +589,7 @@ final class Cloudflare_Headers_Test extends TestCase {
 ./vendor/bin/phpunit tests/Unit/Cloudflare_Headers_Test.php
 ```
 
-Expected: FAIL with `Class "The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Cloudflare_Headers" not found`.
+Expected: FAIL with `Class "The_Another\Plugin\Aucteeno_Geo_Tagging\Cloudflare_Headers" not found`.
 
 - [ ] **Step 3: Commit**
 
@@ -601,7 +601,7 @@ git commit -m "test: add Cloudflare_Headers unit tests (failing)"
 ### Task 9: Implement `Cloudflare_Headers`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/includes/class-cloudflare-headers.php`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/includes/class-cloudflare-headers.php`
 
 - [ ] **Step 1: Write the class**
 
@@ -612,13 +612,13 @@ git commit -m "test: add Cloudflare_Headers unit tests (failing)"
  *
  * Reads and validates Cloudflare geo-location headers from $_SERVER.
  *
- * @package Aucteeno_Nexus_Geo_Tagging
+ * @package Aucteeno_Geo_Tagging
  * @since 0.1.0
  */
 
 declare(strict_types=1);
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging;
 
 /**
  * Reads and validates Cloudflare geo headers.
@@ -696,12 +696,12 @@ git commit -m "feat: implement Cloudflare_Headers reader"
 
 ## Chunk 3: `Bot_Detector` class (TDD)
 
-**Repo:** `wp-content/plugins/aucteeno-nexus-geo-tagging/` (master)
+**Repo:** `wp-content/plugins/aucteeno-geo-tagging/` (master)
 
 ### Task 10: Write failing tests for `Bot_Detector`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/tests/Unit/Bot_Detector_Test.php`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/tests/Unit/Bot_Detector_Test.php`
 
 - [ ] **Step 1: Write the test file**
 
@@ -710,17 +710,17 @@ git commit -m "feat: implement Cloudflare_Headers reader"
 /**
  * Tests for Bot_Detector.
  *
- * @package The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests\Unit
+ * @package The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit
  */
 
 declare(strict_types=1);
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests\Unit;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit;
 
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
-use The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Bot_Detector;
+use The_Another\Plugin\Aucteeno_Geo_Tagging\Bot_Detector;
 
 final class Bot_Detector_Test extends TestCase {
 
@@ -831,7 +831,7 @@ final class Bot_Detector_Test extends TestCase {
 ./vendor/bin/phpunit tests/Unit/Bot_Detector_Test.php
 ```
 
-Expected: FAIL with `Class "The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Bot_Detector" not found`.
+Expected: FAIL with `Class "The_Another\Plugin\Aucteeno_Geo_Tagging\Bot_Detector" not found`.
 
 - [ ] **Step 3: Commit**
 
@@ -843,7 +843,7 @@ git commit -m "test: add Bot_Detector unit tests (failing)"
 ### Task 11: Implement `Bot_Detector`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/includes/class-bot-detector.php`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/includes/class-bot-detector.php`
 
 - [ ] **Step 1: Write the class**
 
@@ -854,13 +854,13 @@ git commit -m "test: add Bot_Detector unit tests (failing)"
  *
  * User-Agent heuristic for detecting crawlers, previewers, and headless browsers.
  *
- * @package Aucteeno_Nexus_Geo_Tagging
+ * @package Aucteeno_Geo_Tagging
  * @since 0.1.0
  */
 
 declare(strict_types=1);
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging;
 
 /**
  * Detects bot traffic based on a curated list of User-Agent substrings.
@@ -955,12 +955,12 @@ git commit -m "feat: implement Bot_Detector"
 
 ## Chunk 4: `Geo_Tagging` class — filter wiring (TDD)
 
-**Repo:** `wp-content/plugins/aucteeno-nexus-geo-tagging/` (master)
+**Repo:** `wp-content/plugins/aucteeno-geo-tagging/` (master)
 
 ### Task 12: Write failing tests for `Geo_Tagging::filter_location()`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/tests/Unit/Geo_Tagging_Test.php`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/tests/Unit/Geo_Tagging_Test.php`
 
 - [ ] **Step 1: Write the test file**
 
@@ -972,19 +972,19 @@ git commit -m "feat: implement Bot_Detector"
  * Uses real Cloudflare_Headers and Bot_Detector instances driven by $_SERVER,
  * since both classes are pure and trivially controllable via the superglobal.
  *
- * @package The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests\Unit
+ * @package The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit
  */
 
 declare(strict_types=1);
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests\Unit;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit;
 
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
-use The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Bot_Detector;
-use The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Cloudflare_Headers;
-use The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Geo_Tagging;
+use The_Another\Plugin\Aucteeno_Geo_Tagging\Bot_Detector;
+use The_Another\Plugin\Aucteeno_Geo_Tagging\Cloudflare_Headers;
+use The_Another\Plugin\Aucteeno_Geo_Tagging\Geo_Tagging;
 
 final class Geo_Tagging_Test extends TestCase {
 
@@ -1175,7 +1175,7 @@ final class Geo_Tagging_Test extends TestCase {
 ./vendor/bin/phpunit tests/Unit/Geo_Tagging_Test.php
 ```
 
-Expected: FAIL with `Class "The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Geo_Tagging" not found`.
+Expected: FAIL with `Class "The_Another\Plugin\Aucteeno_Geo_Tagging\Geo_Tagging" not found`.
 
 - [ ] **Step 3: Commit**
 
@@ -1187,7 +1187,7 @@ git commit -m "test: add Geo_Tagging unit tests (failing)"
 ### Task 13: Implement `Geo_Tagging` class
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/includes/class-geo-tagging.php`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/includes/class-geo-tagging.php`
 
 - [ ] **Step 1: Write the class**
 
@@ -1199,13 +1199,13 @@ git commit -m "test: add Geo_Tagging unit tests (failing)"
  * Composes Cloudflare_Headers and Bot_Detector to produce a filter callback
  * for aucteeno_query_loop_location. Owns the block-editor asset enqueue hook.
  *
- * @package Aucteeno_Nexus_Geo_Tagging
+ * @package Aucteeno_Geo_Tagging
  * @since 0.1.0
  */
 
 declare(strict_types=1);
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging;
 
 /**
  * Wires the aucteeno_query_loop_location filter and the editor JS enqueue.
@@ -1300,23 +1300,23 @@ final class Geo_Tagging {
 	 * is missing (e.g., plugin installed without running `npm run build`).
 	 */
 	public function enqueue_editor_assets(): void {
-		$asset_path = AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_DIR . 'dist/query-loop-inspector.asset.php';
+		$asset_path = AUCTEENO_GEO_TAGGING_PLUGIN_DIR . 'dist/query-loop-inspector.asset.php';
 		if ( ! file_exists( $asset_path ) ) {
 			return;
 		}
 
 		$asset = require $asset_path;
 		wp_enqueue_script(
-			'aucteeno-nexus-geo-tagging-inspector',
-			AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_URL . 'dist/query-loop-inspector.js',
+			'aucteeno-geo-tagging-inspector',
+			AUCTEENO_GEO_TAGGING_PLUGIN_URL . 'dist/query-loop-inspector.js',
 			$asset['dependencies'] ?? array(),
-			$asset['version'] ?? AUCTEENO_NEXUS_GEO_TAGGING_VERSION,
+			$asset['version'] ?? AUCTEENO_GEO_TAGGING_VERSION,
 			true
 		);
 
 		wp_set_script_translations(
-			'aucteeno-nexus-geo-tagging-inspector',
-			'aucteeno-nexus-geo-tagging'
+			'aucteeno-geo-tagging-inspector',
+			'aucteeno-geo-tagging'
 		);
 	}
 }
@@ -1357,18 +1357,18 @@ git commit -m "feat: implement Geo_Tagging filter and enqueue wiring"
 
 ## Chunk 5: Editor JS (block attributes + Inspector panel)
 
-**Repo:** `wp-content/plugins/aucteeno-nexus-geo-tagging/` (master)
+**Repo:** `wp-content/plugins/aucteeno-geo-tagging/` (master)
 
 ### Task 14: Create `package.json`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/package.json`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/package.json`
 
 - [ ] **Step 1: Write the file**
 
 ```json
 {
-    "name": "aucteeno-nexus-geo-tagging",
+    "name": "aucteeno-geo-tagging",
     "version": "0.1.0",
     "description": "Cloudflare geo-header based filtering for Aucteeno Query Loop blocks.",
     "private": true,
@@ -1384,7 +1384,7 @@ git commit -m "feat: implement Geo_Tagging filter and enqueue wiring"
         "@wordpress/scripts": "^30.0.0"
     },
     "files": [
-        "aucteeno-nexus-geo-tagging.php",
+        "aucteeno-geo-tagging.php",
         "includes/",
         "dist/",
         "readme.txt",
@@ -1411,13 +1411,13 @@ git commit -m "chore: add package.json with @wordpress/scripts"
 ### Task 15: Write the editor JS
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/assets/js/query-loop-inspector.js`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/assets/js/query-loop-inspector.js`
 
 - [ ] **Step 1: Write the file**
 
 ```js
 /**
- * Aucteeno Nexus Geo-Tagging — Query Loop Inspector.
+ * Aucteeno Geo-Tagging — Query Loop Inspector.
  *
  * Adds two block attributes (geoTaggingEnabled, geoTaggingAffectsBots) to
  * the aucteeno/query-loop block at runtime via blocks.registerBlockType, and
@@ -1432,7 +1432,7 @@ import { Fragment, createElement } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 const BLOCK_NAME = 'aucteeno/query-loop';
-const FILTER_NAMESPACE = 'aucteeno-nexus-geo-tagging';
+const FILTER_NAMESPACE = 'aucteeno-geo-tagging';
 
 /**
  * Register the two new block attributes on aucteeno/query-loop.
@@ -1486,14 +1486,14 @@ const withGeoTaggingInspector = createHigherOrderComponent( ( BlockEdit ) => {
 				createElement(
 					PanelBody,
 					{
-						title: __( 'Geo-Tagging', 'aucteeno-nexus-geo-tagging' ),
+						title: __( 'Geo-Tagging', 'aucteeno-geo-tagging' ),
 						initialOpen: false,
 					},
 					createElement( ToggleControl, {
-						label: __( 'Enable geo-tagging', 'aucteeno-nexus-geo-tagging' ),
+						label: __( 'Enable geo-tagging', 'aucteeno-geo-tagging' ),
 						help: __(
 							"When enabled, the visitor's Cloudflare-detected country and region override any manually set location filters. The editor preview reflects your own location.",
-							'aucteeno-nexus-geo-tagging'
+							'aucteeno-geo-tagging'
 						),
 						checked: !! geoTaggingEnabled,
 						onChange: ( value ) =>
@@ -1503,11 +1503,11 @@ const withGeoTaggingInspector = createHigherOrderComponent( ( BlockEdit ) => {
 						createElement( ToggleControl, {
 							label: __(
 								'Also apply to bots',
-								'aucteeno-nexus-geo-tagging'
+								'aucteeno-geo-tagging'
 							),
 							help: __(
 								'By default, detected bots (search crawlers, social previewers) bypass geo-tagging so they see the default content. Enable this to apply geo-tagging to bots too.',
-								'aucteeno-nexus-geo-tagging'
+								'aucteeno-geo-tagging'
 							),
 							checked: !! geoTaggingAffectsBots,
 							onChange: ( value ) =>
@@ -1563,12 +1563,12 @@ git commit -m "feat: add query-loop inspector editor script"
 
 ## Chunk 6: Dockerfile, Makefile, documentation
 
-**Repo:** `wp-content/plugins/aucteeno-nexus-geo-tagging/` (master)
+**Repo:** `wp-content/plugins/aucteeno-geo-tagging/` (master)
 
 ### Task 16: Create `Dockerfile`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/Dockerfile`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/Dockerfile`
 
 - [ ] **Step 1: Write the file**
 
@@ -1605,12 +1605,12 @@ git commit -m "chore: add Dockerfile for reproducible builds"
 ### Task 17: Create `Makefile`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/Makefile`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/Makefile`
 
 - [ ] **Step 1: Write the file**
 
 ```makefile
-IMAGE_NAME := aucteeno-nexus-geo-tagging-build
+IMAGE_NAME := aucteeno-geo-tagging-build
 DOCKER_RUN := docker run --rm -v $(PWD):/app -w /app $(IMAGE_NAME)
 
 .PHONY: docker-build install install-dev build lint format test all clean release
@@ -1644,11 +1644,11 @@ clean:
 
 release: install build
 	mkdir -p build
-	rm -rf build/aucteeno-nexus-geo-tagging
-	mkdir -p build/aucteeno-nexus-geo-tagging
-	cp -R aucteeno-nexus-geo-tagging.php includes dist README.md readme.txt \
-		build/aucteeno-nexus-geo-tagging/
-	cd build && zip -r aucteeno-nexus-geo-tagging.zip aucteeno-nexus-geo-tagging
+	rm -rf build/aucteeno-geo-tagging
+	mkdir -p build/aucteeno-geo-tagging
+	cp -R aucteeno-geo-tagging.php includes dist README.md readme.txt \
+		build/aucteeno-geo-tagging/
+	cd build && zip -r aucteeno-geo-tagging.zip aucteeno-geo-tagging
 ```
 
 - [ ] **Step 2: Commit**
@@ -1661,14 +1661,14 @@ git commit -m "chore: add Makefile with docker-wrapped targets"
 ### Task 18: Create `README.md`, `readme.txt`, `CLAUDE.md`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/README.md`
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/readme.txt`
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/CLAUDE.md`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/README.md`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/readme.txt`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/CLAUDE.md`
 
 - [ ] **Step 1: Write `README.md`**
 
 ```markdown
-# Aucteeno Nexus Geo-Tagging
+# Aucteeno Geo-Tagging
 
 Cloudflare geo-header based filtering for the Aucteeno Query Loop block.
 
@@ -1696,12 +1696,12 @@ make test          # run PHPUnit
 make lint          # run PHPCS
 make format        # auto-fix PHPCS issues
 make all           # install-dev + build + lint + test
-make release       # produce build/aucteeno-nexus-geo-tagging.zip
+make release       # produce build/aucteeno-geo-tagging.zip
 ```
 
 ## Architecture
 
-See `docs/superpowers/specs/2026-04-11-aucteeno-nexus-geo-tagging-design.md` for
+See `docs/superpowers/specs/2026-04-11-aucteeno-geo-tagging-design.md` for
 the full design rationale. In short:
 
 - Three PHP classes (`Cloudflare_Headers`, `Bot_Detector`, `Geo_Tagging`), no DI
@@ -1718,7 +1718,7 @@ the full design rationale. In short:
 - [ ] **Step 2: Write `readme.txt`**
 
 ```
-=== Aucteeno Nexus Geo-Tagging ===
+=== Aucteeno Geo-Tagging ===
 Contributors: theanother
 Tags: aucteeno, auction, cloudflare, geo, localization
 Requires at least: 6.9
@@ -1744,7 +1744,7 @@ limitation.
 == Installation ==
 
 1. Install and activate the Aucteeno plugin.
-2. Install and activate Aucteeno Nexus Geo-Tagging.
+2. Install and activate Aucteeno Geo-Tagging.
 3. Edit a post or page containing an Aucteeno Query Loop block.
 4. Select the block and open the "Geo-Tagging" panel in the Inspector sidebar.
 5. Toggle "Enable geo-tagging" on.
@@ -1765,7 +1765,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Project Overview
 
-`aucteeno-nexus-geo-tagging` is a lightweight WordPress extension plugin that adds
+`aucteeno-geo-tagging` is a lightweight WordPress extension plugin that adds
 opt-in Cloudflare-header-based country/subdivision filtering to the Aucteeno Query
 Loop block.
 
@@ -1773,8 +1773,8 @@ Loop block.
 
 Before making changes, read:
 
-- **Design spec:** `docs/superpowers/specs/2026-04-11-aucteeno-nexus-geo-tagging-design.md`
-- **Implementation plan:** `docs/superpowers/plans/2026-04-11-aucteeno-nexus-geo-tagging-implementation.md`
+- **Design spec:** `docs/superpowers/specs/2026-04-11-aucteeno-geo-tagging-design.md`
+- **Implementation plan:** `docs/superpowers/plans/2026-04-11-aucteeno-geo-tagging-implementation.md`
 
 These documents are the source of truth for the plugin's architecture.
 
@@ -1804,7 +1804,7 @@ The editor UI (two ToggleControls in a PanelBody) is injected into the existing
 - PHP 8.3+, WordPress 6.9+.
 - WordPress Coding Standards + VIPCS ruleset.
 - `class-{kebab-name}.php` file naming.
-- Namespace: `The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging`.
+- Namespace: `The_Another\Plugin\Aucteeno_Geo_Tagging`.
 - PHPUnit 11 + Brain Monkey for tests, no WordPress loaded.
 
 ## Don't
@@ -1825,12 +1825,12 @@ git commit -m "docs: add README, readme.txt, and CLAUDE.md"
 
 ## Chunk 7: CI workflows
 
-**Repo:** `wp-content/plugins/aucteeno-nexus-geo-tagging/` (master)
+**Repo:** `wp-content/plugins/aucteeno-geo-tagging/` (master)
 
 ### Task 19: Create `.github/workflows/ci.yml`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/.github/workflows/ci.yml`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/.github/workflows/ci.yml`
 
 - [ ] **Step 1: Write the file**
 
@@ -1967,7 +1967,7 @@ git commit -m "ci: add CI workflow on depot runners"
 ### Task 20: Create `.github/workflows/package.yml`
 
 **Files:**
-- Create: `wp-content/plugins/aucteeno-nexus-geo-tagging/.github/workflows/package.yml`
+- Create: `wp-content/plugins/aucteeno-geo-tagging/.github/workflows/package.yml`
 
 - [ ] **Step 1: Write the file**
 
@@ -2085,7 +2085,7 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           generate_release_notes: true
-          files: aucteeno-nexus-geo-tagging.zip
+          files: aucteeno-geo-tagging.zip
 ```
 
 - [ ] **Step 2: Commit**
@@ -2102,7 +2102,7 @@ git commit -m "ci: add release workflow on depot runners"
 - [ ] **Step 1: Run the full test suite**
 
 ```bash
-cd wp-content/plugins/aucteeno-nexus-geo-tagging
+cd wp-content/plugins/aucteeno-geo-tagging
 ./vendor/bin/phpunit
 ```
 
@@ -2549,7 +2549,7 @@ Call Query_Loop_Location_Filter::apply() from within the
 resolves \$location_country and \$location_subdivision and before
 they are written into \$query_args. Extension plugins can hook
 the new aucteeno_query_loop_location filter to override both
-values (e.g., aucteeno-nexus-geo-tagging, which applies
+values (e.g., aucteeno-geo-tagging, which applies
 Cloudflare-derived country/subdivision).
 
 Also adds a source-level test asserting that the helper call
@@ -2610,7 +2610,7 @@ Prepend an entry for the new patch version. Substitute the next version you comp
 
 ### Added
 
-- New `Query_Loop_Location_Filter` helper class exposing the `aucteeno_query_loop_location` filter. Extension plugins can hook the filter to override the resolved country and subdivision before they are used to query the HPS tables. The helper is called from `blocks/query-loop/render.php` inside a `! $has_product_ids` guard. Consumed by the `aucteeno-nexus-geo-tagging` extension.
+- New `Query_Loop_Location_Filter` helper class exposing the `aucteeno_query_loop_location` filter. Extension plugins can hook the filter to override the resolved country and subdivision before they are used to query the HPS tables. The helper is called from `blocks/query-loop/render.php` inside a `! $has_product_ids` guard. Consumed by the `aucteeno-geo-tagging` extension.
 ```
 
 If `CHANGELOG.md` does not exist, create it with the above entry plus a top-level `# Changelog` header.
@@ -2655,18 +2655,18 @@ gh pr create --title "feat(query-loop): add aucteeno_query_loop_location filter 
 
 ## Why
 
-This hook is the contract consumed by the new `aucteeno-nexus-geo-tagging` extension plugin, which implements opt-in Cloudflare-header-based country/subdivision filtering. Keeping the hook here and the implementation in the extension plugin enforces a clean ownership boundary — the base plugin carries the feature's contract (one filter) but none of its implementation.
+This hook is the contract consumed by the new `aucteeno-geo-tagging` extension plugin, which implements opt-in Cloudflare-header-based country/subdivision filtering. Keeping the hook here and the implementation in the extension plugin enforces a clean ownership boundary — the base plugin carries the feature's contract (one filter) but none of its implementation.
 
 ## Test plan
 
 - [x] `./vendor/bin/phpunit tests/Query_Loop_Location_Filter_Test.php` passes
 - [x] `./vendor/bin/phpunit` (full suite) passes
 - [x] `./vendor/bin/phpcs blocks/query-loop/render.php` passes
-- [ ] Manual QA: install `aucteeno-nexus-geo-tagging`, verify Query Loop Inspector shows the new Geo-Tagging panel and toggling it visibly changes rendered results when the request has CF headers
+- [ ] Manual QA: install `aucteeno-geo-tagging`, verify Query Loop Inspector shows the new Geo-Tagging panel and toggling it visibly changes rendered results when the request has CF headers
 
 ## Related
 
-Design spec: see `aucteeno-nexus-geo-tagging` repo at `docs/superpowers/specs/2026-04-11-aucteeno-nexus-geo-tagging-design.md`.
+Design spec: see `aucteeno-geo-tagging` repo at `docs/superpowers/specs/2026-04-11-aucteeno-geo-tagging-design.md`.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
@@ -2690,7 +2690,7 @@ Expected: PR opened. Return the URL.
 - [ ] **Step 1: Verify clean working tree**
 
 ```bash
-cd wp-content/plugins/aucteeno-nexus-geo-tagging
+cd wp-content/plugins/aucteeno-geo-tagging
 git status
 ```
 
@@ -2710,7 +2710,7 @@ Expected: push succeeds. The `package.yml` release workflow will trigger and cre
 
 - [ ] **Step 1: Ensure both plugins are activated in WordPress**
 
-In a test WordPress install where `aucteeno` feature branch is installed and `aucteeno-nexus-geo-tagging` is activated:
+In a test WordPress install where `aucteeno` feature branch is installed and `aucteeno-geo-tagging` is activated:
 - Visit the WordPress admin.
 - Open a page/post containing an Aucteeno Query Loop block.
 - Select the block; confirm the "Geo-Tagging" panel appears in the Inspector sidebar.
@@ -2748,9 +2748,9 @@ Document any issues or unexpected behaviors observed during the smoke test. If a
 
 Before marking this plan complete:
 
-- [ ] `aucteeno-nexus-geo-tagging` has ~34 passing PHPUnit tests.
-- [ ] `aucteeno-nexus-geo-tagging` has passing PHPCS, lint-js, and `npm run build`.
-- [ ] `aucteeno-nexus-geo-tagging` has a green CI run on `master` and a created `v0.1.0` release.
+- [ ] `aucteeno-geo-tagging` has ~34 passing PHPUnit tests.
+- [ ] `aucteeno-geo-tagging` has passing PHPCS, lint-js, and `npm run build`.
+- [ ] `aucteeno-geo-tagging` has a green CI run on `master` and a created `v0.1.0` release.
 - [ ] `aucteeno` feature branch has 3 new tests passing, full suite passing, PR opened.
 - [ ] Manual smoke test passed for enabled/disabled, bot-allowed/bot-disallowed, and missing-CF-headers cases.
 - [ ] Both plugins installed together in a test WordPress environment show the expected Inspector panel and visibly alter frontend results based on CF headers.
@@ -2758,6 +2758,6 @@ Before marking this plan complete:
 ## Notes for the executing agent
 
 - **Commits are frequent and small.** Every task ends in at least one `git commit`. Do not batch commits across tasks.
-- **Cross-repo discipline.** Each task states the repo. Double-check `git status` and `pwd` before committing — easy to accidentally commit aucteeno-nexus-geo-tagging changes to the aucteeno repo or vice versa.
+- **Cross-repo discipline.** Each task states the repo. Double-check `git status` and `pwd` before committing — easy to accidentally commit aucteeno-geo-tagging changes to the aucteeno repo or vice versa.
 - **Stop and ask if a step fails unexpectedly.** Especially: if the aucteeno feature-branch test in Task 23 can't be written cleanly against `render.php` as-is, surface the problem before refactoring the base plugin's file structure.
-- **The spec is the source of truth.** If you notice a contradiction between this plan and `docs/superpowers/specs/2026-04-11-aucteeno-nexus-geo-tagging-design.md`, stop and ask.
+- **The spec is the source of truth.** If you notice a contradiction between this plan and `docs/superpowers/specs/2026-04-11-aucteeno-geo-tagging-design.md`, stop and ask.

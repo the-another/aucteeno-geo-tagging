@@ -1,8 +1,8 @@
 <?php
 /**
- * PHPUnit bootstrap file for Aucteeno Nexus Geo-Tagging plugin tests.
+ * PHPUnit bootstrap file for Aucteeno Geo-Tagging plugin tests.
  *
- * @package The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests
+ * @package The_Another\Plugin\Aucteeno_Geo_Tagging\Tests
  */
 
 declare(strict_types=1);

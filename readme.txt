@@ -1,4 +1,4 @@
-=== Aucteeno Nexus Geo-Tagging ===
+=== Aucteeno Geo-Tagging ===
 Contributors: theanother
 Tags: aucteeno, auction, cloudflare, geo, localization
 Requires at least: 6.9
@@ -24,7 +24,7 @@ limitation.
 == Installation ==
 
 1. Install and activate the Aucteeno plugin.
-2. Install and activate Aucteeno Nexus Geo-Tagging.
+2. Install and activate Aucteeno Geo-Tagging.
 3. Edit a post or page containing an Aucteeno Query Loop block.
 4. Select the block and open the "Geo-Tagging" panel in the Inspector sidebar.
 5. Toggle "Enable geo-tagging" on.

@@ -1,14 +1,14 @@
-# Aucteeno Nexus Geo-Tagging — Design Spec
+# Aucteeno Geo-Tagging — Design Spec
 
 **Date:** 2026-04-11
 **Status:** Approved — ready for implementation plan
-**Scope:** New extension plugin `aucteeno-nexus-geo-tagging` + one filter hook in base `aucteeno` plugin
+**Scope:** New extension plugin `aucteeno-geo-tagging` + one filter hook in base `aucteeno` plugin
 
 ---
 
 ## 1. Summary
 
-Add an opt-in feature to the Aucteeno Query Loop block that filters listings by the visitor's Cloudflare-detected country and subdivision. The feature is delivered as a new, separately-distributed extension plugin (`aucteeno-nexus-geo-tagging`) that plugs into a single new filter hook added to the base `aucteeno` plugin. Bot traffic bypasses the filter by default; site operators can opt bots in via a per-block checkbox.
+Add an opt-in feature to the Aucteeno Query Loop block that filters listings by the visitor's Cloudflare-detected country and subdivision. The feature is delivered as a new, separately-distributed extension plugin (`aucteeno-geo-tagging`) that plugs into a single new filter hook added to the base `aucteeno` plugin. Bot traffic bypasses the filter by default; site operators can opt bots in via a per-block checkbox.
 
 ## 2. Goals & non-goals
 
@@ -43,7 +43,7 @@ The feature splits across two repos with a minimal contract between them.
 
 **`aucteeno` (base plugin)** — one new filter hook in `blocks/query-loop/render.php` (wrapped in a `! $has_product_ids` guard), defense-in-depth sanitization of the filter return value, a companion PHPUnit test, a patch-level version bump, and a changelog entry. Full scope is enumerated in §15. Delivered on a new feature branch `feat/query-loop-geo-tagging-hooks`.
 
-**`aucteeno-nexus-geo-tagging` (extension plugin)** — new plugin carrying all geo-tagging logic. Delivered on `master` since it is not yet released.
+**`aucteeno-geo-tagging` (extension plugin)** — new plugin carrying all geo-tagging logic. Delivered on `master` since it is not yet released.
 
 ### 4.2 Plugin shape — lightweight
 
@@ -52,8 +52,8 @@ No dependency injection container, no Hook_Manager, no Mozart build step, no ext
 ### 4.3 Repository layout
 
 ```
-aucteeno-nexus-geo-tagging/
-├── aucteeno-nexus-geo-tagging.php        # plugin header, boot, version check
+aucteeno-geo-tagging/
+├── aucteeno-geo-tagging.php        # plugin header, boot, version check
 ├── composer.json                          # PSR-4, phpcs, phpunit (no runtime deps)
 ├── package.json                           # @wordpress/scripts only
 ├── phpunit.xml.dist
@@ -86,9 +86,9 @@ aucteeno-nexus-geo-tagging/
 
 ### 4.4 Namespace & constants
 
-- Namespace: `The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging`
-- Constants: `AUCTEENO_NEXUS_GEO_TAGGING_VERSION`, `_PLUGIN_FILE`, `_PLUGIN_DIR`, `_PLUGIN_URL`, `_PLUGIN_BASENAME`
-- Text domain: `aucteeno-nexus-geo-tagging`
+- Namespace: `The_Another\Plugin\Aucteeno_Geo_Tagging`
+- Constants: `AUCTEENO_GEO_TAGGING_VERSION`, `_PLUGIN_FILE`, `_PLUGIN_DIR`, `_PLUGIN_URL`, `_PLUGIN_BASENAME`
+- Text domain: `aucteeno-geo-tagging`
 
 ### 4.5 Boot flow
 
@@ -490,7 +490,7 @@ PHPUnit 11 + Brain Monkey, no WordPress loaded, no database.
 
 ```json
 {
-    "name": "the-another/aucteeno-nexus-geo-tagging",
+    "name": "the-another/aucteeno-geo-tagging",
     "type": "wordpress-plugin",
     "require": {
         "php": ">=8.3"
@@ -504,12 +504,12 @@ PHPUnit 11 + Brain Monkey, no WordPress loaded, no database.
     },
     "autoload": {
         "psr-4": {
-            "The_Another\\Plugin\\Aucteeno_Nexus_Geo_Tagging\\": "includes/"
+            "The_Another\\Plugin\\Aucteeno_Geo_Tagging\\": "includes/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "The_Another\\Plugin\\Aucteeno_Nexus_Geo_Tagging\\Tests\\": "tests/"
+            "The_Another\\Plugin\\Aucteeno_Geo_Tagging\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -529,8 +529,8 @@ Copied from `aucteeno-nexus` with the `build` target simplified to `npm run buil
 ### 13.3 Plugin header
 
 ```
-Plugin Name: Aucteeno Nexus Geo-Tagging
-Plugin URI: https://theanother.org/plugin/aucteeno-nexus-geo-tagging/
+Plugin Name: Aucteeno Geo-Tagging
+Plugin URI: https://theanother.org/plugin/aucteeno-geo-tagging/
 Description: Cloudflare geo-header based filtering for Aucteeno Query Loop blocks.
 Version: 0.1.0
 Author: The Another
@@ -538,9 +538,9 @@ Author URI: https://theanother.org
 Requires at least: 6.9
 Requires PHP: 8.3
 Requires Plugins: aucteeno
-Text Domain: aucteeno-nexus-geo-tagging
+Text Domain: aucteeno-geo-tagging
 License: GPL v2 or later
-GitHub Plugin URI: https://github.com/the-another/aucteeno-nexus-geo-tagging
+GitHub Plugin URI: https://github.com/the-another/aucteeno-geo-tagging
 Primary Branch: master
 Release Asset: true
 ```

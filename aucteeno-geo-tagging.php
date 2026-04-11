@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: Aucteeno Nexus Geo-Tagging
- * Plugin URI: https://theanother.org/plugin/aucteeno-nexus-geo-tagging/
+ * Plugin Name: Aucteeno Geo-Tagging
+ * Plugin URI: https://theanother.org/plugin/aucteeno-geo-tagging/
  * Description: Cloudflare geo-header based filtering for Aucteeno Query Loop blocks.
  * Version: 0.1.0
  * Author: The Another
@@ -9,30 +9,30 @@
  * Requires at least: 6.9
  * Requires PHP: 8.3
  * Requires Plugins: aucteeno
- * Text Domain: aucteeno-nexus-geo-tagging
+ * Text Domain: aucteeno-geo-tagging
  * Domain Path: /languages
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * GitHub Plugin URI: https://github.com/aucteeno/aucteeno-nexus-geo-tagging
+ * GitHub Plugin URI: https://github.com/aucteeno/aucteeno-geo-tagging
  * Primary Branch: master
  * Release Asset: true
  *
- * @package Aucteeno_Nexus_Geo_Tagging
+ * @package Aucteeno_Geo_Tagging
  * @since 0.1.0
  */
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 // Define plugin constants.
-define( 'AUCTEENO_NEXUS_GEO_TAGGING_VERSION', '0.1.0' );
-define( 'AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_FILE', __FILE__ );
-define( 'AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+define( 'AUCTEENO_GEO_TAGGING_VERSION', '0.1.0' );
+define( 'AUCTEENO_GEO_TAGGING_PLUGIN_FILE', __FILE__ );
+define( 'AUCTEENO_GEO_TAGGING_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'AUCTEENO_GEO_TAGGING_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'AUCTEENO_GEO_TAGGING_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 // Minimum PHP version check.
 if ( version_compare( PHP_VERSION, '8.3', '<' ) ) {
@@ -41,7 +41,7 @@ if ( version_compare( PHP_VERSION, '8.3', '<' ) ) {
 		function () {
 			?>
 			<div class="notice notice-error">
-				<p><?php echo esc_html( 'Aucteeno Nexus Geo-Tagging requires PHP 8.3 or higher. Please upgrade your PHP version.' ); ?></p>
+				<p><?php echo esc_html( 'Aucteeno Geo-Tagging requires PHP 8.3 or higher. Please upgrade your PHP version.' ); ?></p>
 			</div>
 			<?php
 		}
@@ -57,7 +57,7 @@ if ( version_compare( $wp_version, '6.9', '<' ) ) {
 		function () {
 			?>
 			<div class="notice notice-error">
-				<p><?php echo esc_html( 'Aucteeno Nexus Geo-Tagging requires WordPress 6.9 or higher. Please upgrade WordPress.' ); ?></p>
+				<p><?php echo esc_html( 'Aucteeno Geo-Tagging requires WordPress 6.9 or higher. Please upgrade WordPress.' ); ?></p>
 			</div>
 			<?php
 		}
@@ -66,10 +66,10 @@ if ( version_compare( $wp_version, '6.9', '<' ) ) {
 }
 
 // Autoloader. Bail entirely if missing — classmap-autoloaded classes won't be available.
-if ( ! file_exists( AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
+if ( ! file_exists( AUCTEENO_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
 	return;
 }
-require_once AUCTEENO_NEXUS_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php';
+require_once AUCTEENO_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php';
 
 // Initialize plugin after Aucteeno and Aucteeno Nexus load.
 add_action(

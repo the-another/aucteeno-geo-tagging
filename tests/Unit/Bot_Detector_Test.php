@@ -2,17 +2,17 @@
 /**
  * Tests for Bot_Detector.
  *
- * @package The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests\Unit
+ * @package The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit
  */
 
 declare(strict_types=1);
 
-namespace The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Tests\Unit;
+namespace The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit;
 
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
-use The_Another\Plugin\Aucteeno_Nexus_Geo_Tagging\Bot_Detector;
+use The_Another\Plugin\Aucteeno_Geo_Tagging\Bot_Detector;
 
 final class Bot_Detector_Test extends TestCase {
 

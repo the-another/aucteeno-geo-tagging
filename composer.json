@@ -1,5 +1,5 @@
 {
-    "name": "theanother/aucteeno-nexus-geo-tagging",
+    "name": "theanother/aucteeno-geo-tagging",
     "description": "Cloudflare geo-header based filtering for Aucteeno Query Loop blocks.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
@@ -9,10 +9,10 @@
         "email": "hello@theanother.org",
         "url": "https://theanother.org"
     },
-    "homepage": "https://theanother.org/plugin/aucteeno-nexus-geo-tagging/",
+    "homepage": "https://theanother.org/plugin/aucteeno-geo-tagging/",
     "support": {
-        "issues": "https://github.com/aucteeno/aucteeno-nexus-geo-tagging/issues",
-        "source": "https://github.com/aucteeno/aucteeno-nexus-geo-tagging"
+        "issues": "https://github.com/aucteeno/aucteeno-geo-tagging/issues",
+        "source": "https://github.com/aucteeno/aucteeno-geo-tagging"
     },
     "require": {
         "php": ">=8.3"
@@ -32,7 +32,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "The_Another\\Plugin\\Aucteeno_Nexus_Geo_Tagging\\Tests\\": "tests/"
+            "The_Another\\Plugin\\Aucteeno_Geo_Tagging\\Tests\\": "tests/"
         }
     },
     "config": {

@@ -1,4 +1,4 @@
-IMAGE_NAME := aucteeno-nexus-geo-tagging-build
+IMAGE_NAME := aucteeno-geo-tagging-build
 DOCKER_RUN := docker run --rm -v $(PWD):/app -w /app $(IMAGE_NAME)
 
 .PHONY: docker-build install install-dev build lint format test all clean release
@@ -32,8 +32,8 @@ clean:
 
 release: install build
 	mkdir -p build
-	rm -rf build/aucteeno-nexus-geo-tagging
-	mkdir -p build/aucteeno-nexus-geo-tagging
-	cp -R aucteeno-nexus-geo-tagging.php includes dist README.md readme.txt \
-		build/aucteeno-nexus-geo-tagging/
-	cd build && zip -r aucteeno-nexus-geo-tagging.zip aucteeno-nexus-geo-tagging
+	rm -rf build/aucteeno-geo-tagging
+	mkdir -p build/aucteeno-geo-tagging
+	cp -R aucteeno-geo-tagging.php includes dist README.md readme.txt \
+		build/aucteeno-geo-tagging/
+	cd build && zip -r aucteeno-geo-tagging.zip aucteeno-geo-tagging
