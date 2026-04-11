@@ -1,0 +1,24 @@
+{
+    "name": "aucteeno-nexus-geo-tagging",
+    "version": "0.1.0",
+    "description": "Cloudflare geo-header based filtering for Aucteeno Query Loop blocks.",
+    "private": true,
+    "license": "GPL-2.0-or-later",
+    "scripts": {
+        "build": "wp-scripts build assets/js/query-loop-inspector.js --output-path=dist",
+        "start": "wp-scripts start assets/js/query-loop-inspector.js --output-path=dist",
+        "lint:js": "wp-scripts lint-js assets/js",
+        "format": "wp-scripts format assets/js",
+        "plugin-zip": "wp-scripts plugin-zip"
+    },
+    "devDependencies": {
+        "@wordpress/scripts": "^30.0.0"
+    },
+    "files": [
+        "aucteeno-nexus-geo-tagging.php",
+        "includes/",
+        "dist/",
+        "readme.txt",
+        "README.md"
+    ]
+}
