@@ -3,7 +3,7 @@
     "description": "Cloudflare geo-header based filtering for Aucteeno Query Loop blocks.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "author": {
         "name": "The Another",
         "email": "hello@theanother.org",

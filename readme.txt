@@ -4,7 +4,7 @@ Tags: aucteeno, auction, cloudflare, geo, localization
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.3
-Stable tag: 0.1.2
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,11 @@ limitation.
 6. Optionally toggle "Also apply to bots" if you want crawlers to see filtered results.
 
 == Changelog ==
+
+
+= 0.2.0 - 2026-04-12 =
+* Fixed: release zip still shipped without the Composer `vendor/` directory despite 0.1.2 adding it to the `files` allowlist — `npm-packlist` was falling back to `.gitignore`, which excludes `/vendor/`. A `.npmignore` file now sits alongside `.gitignore` so `package.json`'s `files` field becomes the sole allowlist and `vendor/autoload.php` actually lands in the zip. The Geo-Tagging panel now appears in the Aucteeno Query Loop block inspector on a fresh install of the release zip.
+* Changed: the missing-autoloader guard in the main plugin file no longer silently `return`s. An `register_activation_hook` refuses activation via `wp_die()` when `vendor/autoload.php` is absent, and a runtime guard surfaces an `admin_notices` error plus self-deactivates if the autoloader disappears from an already-active install. A broken archive can no longer masquerade as a working install.
 
 = 0.1.2 - 2026-04-11 =
 * Fixed: release zip was missing the Composer `vendor/` directory, causing the plugin to silently bail at the autoloader guard on fresh installs — the Geo-Tagging panel never appeared in the Aucteeno Query Loop block inspector. `vendor/` is now included in both the CI (`wp-scripts plugin-zip`) and dev-local (`make release`) packaging paths.
