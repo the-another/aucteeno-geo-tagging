@@ -199,5 +199,10 @@ final class Geo_Tagging_Test extends TestCase {
 			->with( 'enqueue_block_editor_assets', array( $this->subject, 'enqueue_editor_assets' ) );
 
 		$this->subject->init();
+
+		// Brain Monkey's Functions\expect assertions are verified in Monkey\tearDown(),
+		// which PHPUnit doesn't count as regular assertions. Add two explicit assertion
+		// count increments so the test is not flagged as risky by failOnRisky="true".
+		$this->addToAssertionCount( 2 );
 	}
 }
