@@ -1,0 +1,6 @@
+.git/
+vendor/
+node_modules/
+dist/
+build/
+.phpunit.cache/
