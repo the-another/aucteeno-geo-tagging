@@ -26,7 +26,7 @@ final class Cloudflare_Headers {
 		if ( ! isset( $_SERVER['HTTP_CF_IPCOUNTRY'] ) || ! is_string( $_SERVER['HTTP_CF_IPCOUNTRY'] ) ) {
 			return '';
 		}
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized below via sanitize_text_field.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized inline via sanitize_text_field.
 		$value = strtoupper( trim( sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_IPCOUNTRY'] ) ) ) );
 		if ( ! preg_match( '/^[A-Z]{2}$/', $value ) ) {
 			return '';
@@ -51,7 +51,7 @@ final class Cloudflare_Headers {
 		if ( ! isset( $_SERVER['HTTP_CF_REGION_CODE'] ) || ! is_string( $_SERVER['HTTP_CF_REGION_CODE'] ) ) {
 			return '';
 		}
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized below via sanitize_text_field.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized inline via sanitize_text_field.
 		$value = strtoupper( trim( sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_REGION_CODE'] ) ) ) );
 		if ( ! preg_match( '/^[A-Z0-9]{1,3}$/', $value ) ) {
 			return '';
