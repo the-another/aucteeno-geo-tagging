@@ -3,7 +3,7 @@
  * Plugin Name: Aucteeno Geo-Tagging
  * Plugin URI: https://theanother.org/plugin/aucteeno-geo-tagging/
  * Description: Cloudflare geo-header based filtering for Aucteeno Query Loop blocks.
- * Version: 0.1.2
+ * Version: 0.2.0
  * Author: The Another
  * Author URI: https://theanother.org
  * Requires at least: 6.9
@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'AUCTEENO_GEO_TAGGING_VERSION', '0.1.2' );
+define( 'AUCTEENO_GEO_TAGGING_VERSION', '0.2.0' );
 define( 'AUCTEENO_GEO_TAGGING_PLUGIN_FILE', __FILE__ );
 define( 'AUCTEENO_GEO_TAGGING_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AUCTEENO_GEO_TAGGING_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -65,8 +65,47 @@ if ( version_compare( $wp_version, '6.9', '<' ) ) {
 	return;
 }
 
-// Autoloader. Bail entirely if missing — classmap-autoloaded classes won't be available.
+// Autoloader. Classmap-autoloaded classes live under vendor/ — without it the
+// plugin cannot function. Refuse activation loudly rather than silently no-op'ing,
+// so an incomplete archive can never masquerade as a working install.
+register_activation_hook(
+	__FILE__,
+	function () {
+		if ( file_exists( plugin_dir_path( __FILE__ ) . 'vendor/autoload.php' ) ) {
+			return;
+		}
+		deactivate_plugins( plugin_basename( __FILE__ ) );
+		wp_die(
+			esc_html__(
+				'Aucteeno Geo-Tagging cannot activate: vendor/autoload.php is missing. The plugin archive is incomplete — please reinstall from a proper release zip built via `npm run plugin-zip`.',
+				'aucteeno-geo-tagging'
+			),
+			esc_html__( 'Plugin Activation Error', 'aucteeno-geo-tagging' ),
+			array( 'back_link' => true )
+		);
+	}
+);
+
+// Runtime guard: if the autoloader disappears from an already-active install
+// (file corruption, partial upgrade, manual tampering), self-deactivate and
+// surface an admin notice instead of silently no-op'ing.
 if ( ! file_exists( AUCTEENO_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
+	add_action(
+		'admin_notices',
+		function () {
+			?>
+			<div class="notice notice-error">
+				<p><?php echo esc_html( 'Aucteeno Geo-Tagging is missing its vendor/autoload.php file and has been disabled. Reinstall from a proper release zip to recover.' ); ?></p>
+			</div>
+			<?php
+		}
+	);
+	add_action(
+		'admin_init',
+		function () {
+			deactivate_plugins( plugin_basename( __FILE__ ) );
+		}
+	);
 	return;
 }
 require_once AUCTEENO_GEO_TAGGING_PLUGIN_DIR . 'vendor/autoload.php';

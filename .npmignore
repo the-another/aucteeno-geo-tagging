@@ -1,0 +1,11 @@
+# Intentionally empty.
+#
+# This file exists to stop npm-packlist (used by `wp-scripts plugin-zip`)
+# from falling back to .gitignore when building the release archive.
+#
+# .gitignore excludes /vendor/ from git — correct for source control, but
+# vendor/ MUST ship inside the plugin zip so that
+# aucteeno-geo-tagging.php can require vendor/autoload.php at runtime.
+#
+# With .npmignore present (even empty), the `files` array in package.json
+# becomes the sole allowlist for the zip, and vendor/ is included as intended.
