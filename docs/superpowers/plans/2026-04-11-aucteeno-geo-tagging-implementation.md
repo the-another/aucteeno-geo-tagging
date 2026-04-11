@@ -25,10 +25,10 @@ Commit to the correct repo per task. Each task explicitly names which repo it's 
 
 Before starting Task 1, verify:
 
-1. **`aucteeno-geo-tagging` already exists as a git repository** with remote `origin` pointing to `git@github.com:aucteeno/aucteeno-geo-tagging.git`, and is currently on `master`. Verify with:
+1. **`aucteeno-geo-tagging` already exists as a git repository** with remote `origin` pointing to `git@github.com:the-another/aucteeno-geo-tagging.git`, and is currently on `master`. Verify with:
    ```bash
    cd wp-content/plugins/aucteeno-geo-tagging
-   git remote -v     # must show aucteeno/aucteeno-geo-tagging
+   git remote -v     # must show the-another/aucteeno-geo-tagging
    git branch --show-current    # must show "master"
    git status         # working tree should be clean; the only tracked content is docs/
    ```
@@ -146,8 +146,8 @@ git commit -m "chore: add gitignore and dockerignore"
     },
     "homepage": "https://theanother.org/plugin/aucteeno-geo-tagging/",
     "support": {
-        "issues": "https://github.com/aucteeno/aucteeno-geo-tagging/issues",
-        "source": "https://github.com/aucteeno/aucteeno-geo-tagging"
+        "issues": "https://github.com/the-another/aucteeno-geo-tagging/issues",
+        "source": "https://github.com/the-another/aucteeno-geo-tagging"
     },
     "require": {
         "php": ">=8.3"
@@ -347,7 +347,7 @@ git commit -m "chore: lock composer dependencies"
  * Domain Path: /languages
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * GitHub Plugin URI: https://github.com/aucteeno/aucteeno-geo-tagging
+ * GitHub Plugin URI: https://github.com/the-another/aucteeno-geo-tagging
  * Primary Branch: master
  * Release Asset: true
  *

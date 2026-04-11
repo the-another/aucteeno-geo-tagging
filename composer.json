@@ -11,8 +11,8 @@
     },
     "homepage": "https://theanother.org/plugin/aucteeno-geo-tagging/",
     "support": {
-        "issues": "https://github.com/aucteeno/aucteeno-geo-tagging/issues",
-        "source": "https://github.com/aucteeno/aucteeno-geo-tagging"
+        "issues": "https://github.com/the-another/aucteeno-geo-tagging/issues",
+        "source": "https://github.com/the-another/aucteeno-geo-tagging"
     },
     "require": {
         "php": ">=8.3"
