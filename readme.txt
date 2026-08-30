@@ -14,8 +14,10 @@ Cloudflare geo-header based filtering for Aucteeno Query Loop blocks.
 
 An opt-in extension for the Aucteeno plugin. When enabled per-block, the Query
 Loop block filters auctions and items to match the visitor's Cloudflare-detected
-country and subdivision. Bot traffic (search engines, social previewers) bypasses
-the filter by default, with an optional toggle to include them.
+country. Visitors in the United States and Canada are narrowed further to their
+state or province; other countries stay at country level. Bot traffic (search
+engines, social previewers) bypasses the filter by default, with an optional
+toggle to include them.
 
 Requires the site to be served through Cloudflare. See the plugin README for
 full architecture notes and operator caveats, including the page-caching

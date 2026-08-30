@@ -92,10 +92,43 @@ final class Geo_Tagging {
 		if ( '' === $country ) {
 			return $location;
 		}
-		$subdivision = $this->cf->get_subdivision( $country );
 
-		// 4. CF wins (§10, decision 1). Return the new values; base re-sanitizes.
+		// 4. State/province narrowing is limited to markets where ISO 3166-2 data
+		// and our own location taxonomy actually line up. Everyone else stays at
+		// country level even when cf-region-code is present.
+		$subdivision = '';
+		if ( in_array( $country, $this->subdivision_countries(), true ) ) {
+			$subdivision = $this->cf->get_subdivision( $country );
+		}
+
+		// 5. CF wins (§10, decision 1). Return the new values; base re-sanitizes.
 		return array( $country, $subdivision );
+	}
+
+	/**
+	 * Countries whose visitors get state/province narrowing.
+	 *
+	 * @since 0.3.0
+	 *
+	 * @return string[] Uppercase ISO 3166-1 alpha-2 codes.
+	 */
+	private function subdivision_countries(): array {
+		/**
+		 * Filters the countries eligible for state/province narrowing.
+		 *
+		 * Visitors from any country not in this list are filtered at country
+		 * level only, even when Cloudflare sends a region code.
+		 *
+		 * @since 0.3.0
+		 *
+		 * @param string[] $countries Uppercase ISO 3166-1 alpha-2 codes.
+		 */
+		$countries = apply_filters(
+			'aucteeno_geo_tagging_subdivision_countries',
+			array( 'US', 'CA' )
+		);
+
+		return array_map( 'strtoupper', array_filter( (array) $countries, 'is_string' ) );
 	}
 
 	/**
