@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace The_Another\Plugin\Aucteeno_Geo_Tagging\Tests\Unit;
 
 use Brain\Monkey;
+use Brain\Monkey\Filters;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
 use The_Another\Plugin\Aucteeno_Geo_Tagging\Bot_Detector;
@@ -149,6 +150,89 @@ final class Geo_Tagging_Test extends TestCase {
 		);
 
 		$this->assertSame( array( 'US', '' ), $result );
+	}
+
+	public function test_canada_visitor_keeps_subdivision(): void {
+		$this->human_ua();
+		$_SERVER['HTTP_CF_IPCOUNTRY']   = 'CA';
+		$_SERVER['HTTP_CF_REGION_CODE'] = 'ON';
+
+		$result = $this->subject->filter_location(
+			array( '', '' ),
+			array( 'geoTaggingEnabled' => true ),
+			$this->block_stub
+		);
+
+		$this->assertSame( array( 'CA', 'CA:ON' ), $result );
+	}
+
+	public function test_country_outside_allow_list_drops_subdivision(): void {
+		$this->human_ua();
+		$_SERVER['HTTP_CF_IPCOUNTRY']   = 'DE';
+		$_SERVER['HTTP_CF_REGION_CODE'] = 'BY';
+
+		$result = $this->subject->filter_location(
+			array( '', '' ),
+			array( 'geoTaggingEnabled' => true ),
+			$this->block_stub
+		);
+
+		$this->assertSame( array( 'DE', '' ), $result );
+	}
+
+	public function test_filter_can_opt_a_country_into_subdivision_narrowing(): void {
+		$this->human_ua();
+		$_SERVER['HTTP_CF_IPCOUNTRY']   = 'DE';
+		$_SERVER['HTTP_CF_REGION_CODE'] = 'BY';
+
+		Filters\expectApplied( 'aucteeno_geo_tagging_subdivision_countries' )
+			->once()
+			->with( array( 'US', 'CA' ) )
+			->andReturn( array( 'US', 'CA', 'DE' ) );
+
+		$result = $this->subject->filter_location(
+			array( '', '' ),
+			array( 'geoTaggingEnabled' => true ),
+			$this->block_stub
+		);
+
+		$this->assertSame( array( 'DE', 'DE:BY' ), $result );
+	}
+
+	public function test_filter_can_opt_a_default_country_out(): void {
+		$this->human_ua();
+		$_SERVER['HTTP_CF_IPCOUNTRY']   = 'CA';
+		$_SERVER['HTTP_CF_REGION_CODE'] = 'ON';
+
+		Filters\expectApplied( 'aucteeno_geo_tagging_subdivision_countries' )
+			->once()
+			->andReturn( array( 'US' ) );
+
+		$result = $this->subject->filter_location(
+			array( '', '' ),
+			array( 'geoTaggingEnabled' => true ),
+			$this->block_stub
+		);
+
+		$this->assertSame( array( 'CA', '' ), $result );
+	}
+
+	public function test_filtered_country_codes_are_normalized_to_uppercase(): void {
+		$this->human_ua();
+		$_SERVER['HTTP_CF_IPCOUNTRY']   = 'DE';
+		$_SERVER['HTTP_CF_REGION_CODE'] = 'BY';
+
+		Filters\expectApplied( 'aucteeno_geo_tagging_subdivision_countries' )
+			->once()
+			->andReturn( array( 'us', 'ca', 'de' ) );
+
+		$result = $this->subject->filter_location(
+			array( '', '' ),
+			array( 'geoTaggingEnabled' => true ),
+			$this->block_stub
+		);
+
+		$this->assertSame( array( 'DE', 'DE:BY' ), $result );
 	}
 
 	public function test_cf_sentinel_country_returns_input(): void {

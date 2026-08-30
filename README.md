@@ -29,6 +29,11 @@ globally-scoped and geo-scoped listings on the same page.
 - On any `aucteeno/query-loop` block where the **Geo-Tagging** toggle is
   enabled, overrides the block's `locationCountry` / `locationSubdivision`
   attributes with the visitor's detected values before the query runs.
+- Narrows to state/province for **United States and Canada visitors only**.
+  Everywhere else the filter stays at country level even when Cloudflare sends
+  a region code, because ISO 3166-2 region data and the Aucteeno location
+  taxonomy only line up reliably in those two markets. The allow-list is
+  filterable — see [Extending](#extending).
 - Skips bot traffic by default — search crawlers, social previewers, and
   headless browsers see the block's default (non-geo-filtered) content, which
   keeps SEO and link previews sane. An "Also apply to bots" toggle overrides
@@ -50,6 +55,25 @@ globally-scoped and geo-scoped listings on the same page.
 - **No client-side filtering.** Filtering happens server-side on the initial
   render and on REST API pagination calls. The visitor never sees a "flash of
   unfiltered content."
+
+### Extending
+
+The set of countries eligible for state/province narrowing is filterable, so a
+new market can be opted in without a plugin release:
+
+```php
+add_filter(
+	'aucteeno_geo_tagging_subdivision_countries',
+	function ( array $countries ): array {
+		$countries[] = 'GB';
+
+		return $countries;
+	}
+);
+```
+
+Only add a country once your location taxonomy actually has terms for its
+subdivisions — otherwise visitors from that country will see an empty block.
 
 ## Requirements
 
